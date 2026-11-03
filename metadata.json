@@ -1,0 +1,6 @@
+{
+  "name": "UpCloud Vault",
+  "description": "Lightweight serverless personal cloud storage and semantic document intelligence with Upstash Blob, Vector, QStash, and Redis.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

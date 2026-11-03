@@ -1,0 +1,66 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --ios-bg: #FFFFFF;
+    --ios-card-bg: rgba(255, 255, 255, 0.9);
+    --ios-card-border: rgba(226, 232, 240, 0.85);
+    --ios-text: #0F172A;
+    --ios-text-secondary: #64748B;
+  }
+
+  .dark {
+    --ios-bg: #0B0F19;
+    --ios-card-bg: rgba(17, 24, 39, 0.75);
+    --ios-card-border: rgba(255, 255, 255, 0.08);
+    --ios-text: #F5F5F7;
+    --ios-text-secondary: #94A3B8;
+  }
+
+  * {
+    border-color: var(--color-slate-200);
+  }
+  .dark * {
+    border-color: var(--color-slate-800);
+  }
+}
+
+/* iOS Frosted Glass Utilities */
+.ios-glass {
+  background-color: var(--ios-card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--ios-card-border);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.ios-glass-interactive {
+  background-color: var(--ios-card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--ios-card-border);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ios-glass-interactive:hover {
+  background-color: #FFFFFF;
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  transform: translateY(-2px);
+}
+
+.dark .ios-glass-interactive:hover {
+  background-color: rgba(30, 41, 59, 0.85);
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.4);
+}
+
+.ios-press {
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ios-press:active {
+  transform: scale(0.97);
+}
