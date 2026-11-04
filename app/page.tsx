@@ -338,7 +338,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen relative flex flex-col font-sans transition-colors duration-300 overflow-x-hidden bg-[#06000c] text-white">
+    <div className="min-h-screen relative isolate flex flex-col font-sans transition-colors duration-300 overflow-x-hidden bg-[#06000c] text-white">
       {/* =========================================================================
           Dynamic Wallpaper Layer (背景上传功能 & 默认黑紫色渐变系统)
           ========================================================================= */}

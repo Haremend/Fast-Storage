@@ -53,7 +53,7 @@ export function LoginView({ onLoginSuccess, wallpaperConfig }: LoginViewProps) {
   const hasCustomBg = wallpaperConfig?.type === 'custom' && Boolean(wallpaperConfig.customDataUrl);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans bg-[#06000c] text-white selection:bg-purple-500/30">
+    <div className="min-h-screen flex items-center justify-center p-4 relative isolate overflow-hidden font-sans bg-[#06000c] text-white selection:bg-purple-500/30">
       {/* Dynamic Background Layer (Supports Custom Uploaded Wallpaper or Default Black-Purple) */}
       {hasCustomBg ? (
         <>
