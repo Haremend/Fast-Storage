@@ -131,7 +131,7 @@ export function UploadModal({
             className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all cursor-pointer ${
               !isTextMode
                 ? 'liquid-pill-primary shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             本地文件上传 (PDF, MD, TXT)
@@ -142,7 +142,7 @@ export function UploadModal({
             className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all flex items-center gap-1.5 cursor-pointer ${
               isTextMode
                 ? 'liquid-pill-primary shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
@@ -187,7 +187,7 @@ export function UploadModal({
                     <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
                       点击选择本地文件 或 将文件拖拽至此处
                     </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-300 mt-1">
                       支持 PDF、Markdown、纯文本、JSON 格式（存入 Upstash Blob）
                     </div>
                   </>
@@ -276,7 +276,7 @@ export function UploadModal({
               type="button"
               onClick={onClose}
               disabled={isUploading}
-              className="liquid-pill px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
+              className="liquid-pill px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
             >
               取消
             </button>

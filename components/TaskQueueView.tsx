@@ -158,7 +158,7 @@ export function TaskQueueView() {
             </div>
             <span>QStash 异步任务队列与削峰调度</span>
           </h2>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
             通过 Serverless 消息队列将繁重的文档处理与向量嵌入移出主线程，确保用户上传与交互秒级极速响应。
           </p>
         </div>
@@ -222,7 +222,7 @@ export function TaskQueueView() {
               <TrendingUp className="w-4 h-4 text-emerald-500" />
               <span>1. 极速前端响应 (&lt;100ms)</span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+            <p className="text-[11px] text-slate-500 dark:text-slate-300 leading-relaxed">
               文件上传后立即返回成功，避免用户在浏览器端长时间等待向量计算与文档解析。
             </p>
           </div>
@@ -232,7 +232,7 @@ export function TaskQueueView() {
               <Zap className="w-4 h-4 text-amber-500" />
               <span>2. 削峰防击穿与超时保护</span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+            <p className="text-[11px] text-slate-500 dark:text-slate-300 leading-relaxed">
               Vercel 函数默认有 10-15s 超时限制。QStash 充当蓄水池平滑消费，避免同时触发大量昂贵 API 导致崩溃。
             </p>
           </div>
@@ -242,7 +242,7 @@ export function TaskQueueView() {
               <RotateCcw className="w-4 h-4 text-sky-500" />
               <span>3. 失败指数退避自动重试</span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+            <p className="text-[11px] text-slate-500 dark:text-slate-300 leading-relaxed">
               若因第三方网络波动失败，QStash 会自动按梯度延迟（指数退避）重试，彻底杜绝数据丢失。
             </p>
           </div>
@@ -336,7 +336,7 @@ export function TaskQueueView() {
                 </div>
 
                 {/* 任务类型 */}
-                <div className="hidden sm:block sm:col-span-3 text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                <div className="hidden sm:block sm:col-span-3 text-[11px] font-mono text-slate-500 dark:text-slate-300">
                   {task.taskType === 'extract_and_embed'
                     ? '向量提取与索引'
                     : task.taskType === 'generate_summary'

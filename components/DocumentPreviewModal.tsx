@@ -94,24 +94,24 @@ export function DocumentPreviewModal({
           {/* 元信息卡片网格 */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl liquid-glass-subtle">
             <div>
-              <div className="text-[11px] text-slate-400 dark:text-slate-400 uppercase font-bold font-mono">文件大小</div>
+              <div className="text-[11px] text-slate-400 dark:text-slate-300 uppercase font-bold font-mono">文件大小</div>
               <div className="text-slate-900 dark:text-slate-200 font-mono tabular-nums font-bold mt-0.5">{formattedSize}</div>
             </div>
             <div>
-              <div className="text-[11px] text-slate-400 dark:text-slate-400 uppercase font-bold font-mono">存储方式</div>
+              <div className="text-[11px] text-slate-400 dark:text-slate-300 uppercase font-bold font-mono">存储方式</div>
               <div className="text-emerald-600 dark:text-emerald-400 font-mono mt-0.5 flex items-center gap-1 font-bold">
                 <Cloud className="w-3.5 h-3.5" />
                 <span>Upstash Blob</span>
               </div>
             </div>
             <div>
-              <div className="text-[11px] text-slate-400 dark:text-slate-400 uppercase font-bold font-mono">状态</div>
+              <div className="text-[11px] text-slate-400 dark:text-slate-300 uppercase font-bold font-mono">状态</div>
               <div className="text-slate-900 dark:text-slate-200 mt-0.5 font-bold capitalize">
                 {document.status === 'indexed' ? '已向量索引' : '处理排队中'}
               </div>
             </div>
             <div>
-              <div className="text-[11px] text-slate-400 dark:text-slate-400 uppercase font-bold font-mono">Vector ID</div>
+              <div className="text-[11px] text-slate-400 dark:text-slate-300 uppercase font-bold font-mono">Vector ID</div>
               <div className="text-purple-600 dark:text-purple-400 font-mono truncate mt-0.5 font-bold">
                 {document.vectorId || '排队生成中'}
               </div>
@@ -121,7 +121,7 @@ export function DocumentPreviewModal({
           {/* 标签 */}
           {document.tags.length > 0 && (
             <div>
-              <div className="text-[11px] text-slate-400 dark:text-slate-500 font-bold uppercase mb-2 font-mono">
+              <div className="text-[11px] text-slate-400 dark:text-slate-300 font-bold uppercase mb-2 font-mono">
                 SEMANTIC TAGS / 语义标签
               </div>
               <div className="flex flex-wrap gap-2 text-xs text-slate-700 dark:text-slate-300">
@@ -136,7 +136,7 @@ export function DocumentPreviewModal({
 
           {/* 文档正文与提取文本预览 */}
           <div>
-            <div className="text-[11px] text-slate-400 dark:text-slate-500 font-bold uppercase mb-2 flex items-center gap-1.5 font-mono">
+            <div className="text-[11px] text-slate-400 dark:text-slate-300 font-bold uppercase mb-2 flex items-center gap-1.5 font-mono">
               <Layers className="w-3.5 h-3.5 text-emerald-500" />
               <span>CONTENT PREVIEW / 文档摘要与正文提取预览</span>
             </div>
@@ -147,7 +147,7 @@ export function DocumentPreviewModal({
 
           {/* 关联智能推荐 */}
           <div>
-            <div className="text-[11px] text-slate-400 dark:text-slate-500 font-bold uppercase mb-2.5 flex items-center gap-1.5 font-mono">
+            <div className="text-[11px] text-slate-400 dark:text-slate-300 font-bold uppercase mb-2.5 flex items-center gap-1.5 font-mono">
               <Sparkles className="w-3.5 h-3.5 text-purple-500" />
               <span>RELATED DOCUMENTS / 语义关联文档推荐 (余弦临近)</span>
             </div>
@@ -168,7 +168,7 @@ export function DocumentPreviewModal({
                     <div className="text-xs font-bold text-slate-900 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 truncate">
                       {rec.name}
                     </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-1">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-300 line-clamp-1 mt-1">
                       {rec.summary}
                     </div>
                   </button>

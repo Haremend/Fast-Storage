@@ -111,7 +111,7 @@ QSTASH_TOKEN="从 console.upstash.com/qstash 获取的 Token"`;
             </div>
             <span>系统架构、云端连接与 Redis 遥测</span>
           </h2>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
             无状态无服务器架构，全套适配 Upstash 云端套件并深度兼容 Vercel Serverless 极速冷启动。
           </p>
         </div>
@@ -168,7 +168,7 @@ QSTASH_TOKEN="从 console.upstash.com/qstash 获取的 Token"`;
               )}
               <div>
                 <div className="font-bold text-slate-900 dark:text-white">Upstash Blob 存储</div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{diagnosticData.blob?.message}</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-300 mt-0.5">{diagnosticData.blob?.message}</div>
               </div>
             </div>
 
@@ -180,7 +180,7 @@ QSTASH_TOKEN="从 console.upstash.com/qstash 获取的 Token"`;
               )}
               <div>
                 <div className="font-bold text-slate-900 dark:text-white">Upstash Vector 向量</div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{diagnosticData.vector?.message}</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-300 mt-0.5">{diagnosticData.vector?.message}</div>
               </div>
             </div>
 
@@ -192,7 +192,7 @@ QSTASH_TOKEN="从 console.upstash.com/qstash 获取的 Token"`;
               )}
               <div>
                 <div className="font-bold text-slate-900 dark:text-white">Upstash QStash 队列</div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{diagnosticData.qstash?.message}</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-300 mt-0.5">{diagnosticData.qstash?.message}</div>
               </div>
             </div>
 
@@ -204,7 +204,7 @@ QSTASH_TOKEN="从 console.upstash.com/qstash 获取的 Token"`;
               )}
               <div>
                 <div className="font-bold text-slate-900 dark:text-white">Upstash Redis 缓存</div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{diagnosticData.redis?.message}</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-300 mt-0.5">{diagnosticData.redis?.message}</div>
               </div>
             </div>
           </div>
@@ -261,7 +261,7 @@ QSTASH_TOKEN="从 console.upstash.com/qstash 获取的 Token"`;
               {status?.blobType === 'live' ? '云端已就绪' : '本地兼容模式'}
             </span>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+          <p className="text-xs text-slate-500 dark:text-slate-300 leading-relaxed">
             用于保存用户的高清个人头像与私有文档。支持直接流式上传与边缘全局 CDN 缓存加速，绕过 Serverless 函数 Payload 体积限制。
           </p>
           <div className="p-3.5 rounded-2xl liquid-glass-subtle font-mono text-[11px] text-slate-600 dark:text-slate-300">
@@ -282,7 +282,7 @@ QSTASH_TOKEN="从 console.upstash.com/qstash 获取的 Token"`;
               {status?.vectorType === 'live' ? '云端已就绪' : '本地兼容模式'}
             </span>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+          <p className="text-xs text-slate-500 dark:text-slate-300 leading-relaxed">
             实现基于语义概念的个人文档智能检索与跨篇章相似推荐。支持内置 Dense Embedding 模型，实现免外部第三方 AI 依赖的高速嵌入。
           </p>
           <div className="p-3.5 rounded-2xl liquid-glass-subtle font-mono text-[11px] text-slate-600 dark:text-slate-300">
@@ -303,7 +303,7 @@ QSTASH_TOKEN="从 console.upstash.com/qstash 获取的 Token"`;
               {status?.qstashType === 'live' ? '云端已就绪' : '本地兼容模式'}
             </span>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+          <p className="text-xs text-slate-500 dark:text-slate-300 leading-relaxed">
             将文档提取、高维向量嵌入索引与 Webhook 调度解耦至后台异步执行，提供自动重试机制与死信保护，确保系统在高并发下仍具毫秒级交互体验。
           </p>
           <div className="p-3.5 rounded-2xl liquid-glass-subtle font-mono text-[11px] text-slate-600 dark:text-slate-300">
@@ -324,7 +324,7 @@ QSTASH_TOKEN="从 console.upstash.com/qstash 获取的 Token"`;
               {status?.redisType === 'live' ? '云端已就绪' : '本地兼容模式'}
             </span>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+          <p className="text-xs text-slate-500 dark:text-slate-300 leading-relaxed">
             作为全局分布式缓存层优化数据库和向量查询性能，维护低延迟的用户会话状态管理、令牌频控与高频查询缓存。
           </p>
           <div className="p-3.5 rounded-2xl liquid-glass-subtle font-mono text-[11px] text-slate-600 dark:text-slate-300 flex items-center justify-between">
@@ -360,7 +360,7 @@ QSTASH_TOKEN="从 console.upstash.com/qstash 获取的 Token"`;
             )}
           </button>
         </div>
-        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
           部署到 Vercel 时，仅需在 Vercel 项目设置中的「Settings」-&gt;「Environment Variables」填入对应配置即可。所有 Upstash 服务均采用无连接池阻塞的 REST 协议，完美原生适配 Vercel Serverless 环境。
         </p>
         <pre className="p-4 rounded-2xl liquid-glass-subtle font-mono text-xs text-slate-700 dark:text-slate-300 overflow-x-auto leading-relaxed border border-black/5 dark:border-white/10">

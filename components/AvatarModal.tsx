@@ -144,7 +144,7 @@ export function AvatarModal({
                 onChange={handleFileChange}
                 className="hidden"
               />
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              <p className="text-[11px] text-slate-500 dark:text-slate-300 leading-relaxed">
                 上传后将持久化写入 Upstash Blob，并在 Redis 会话中实时更新。
               </p>
             </div>
@@ -212,7 +212,7 @@ export function AvatarModal({
               type="button"
               onClick={onClose}
               disabled={isUploading}
-              className="liquid-pill px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
+              className="liquid-pill px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
             >
               取消
             </button>

@@ -420,3 +420,13 @@ input[type="range"].liquid-slider::-webkit-slider-thumb {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Dark mode: lift muted label/secondary text (slate-400/500) to slate-300
+   so gray labels match the body description color on any wallpaper.
+   :where() keeps specificity at 0, so hover:/group-hover: color variants
+   still take precedence. */
+@layer utilities {
+  .dark :where(.text-slate-400, .text-slate-500) {
+    color: rgb(203 213 225);
+  }
+}

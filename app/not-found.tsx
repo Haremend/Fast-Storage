@@ -9,7 +9,7 @@ export default function NotFound() {
           <ShieldAlert className="w-7 h-7" />
         </div>
         <h1 className="text-xl font-bold">404 - 页面未找到</h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <p className="text-xs text-slate-500 dark:text-slate-300">
           您访问的页面不存在或已被移除。
         </p>
         <Link

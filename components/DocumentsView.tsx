@@ -98,7 +98,7 @@ export function DocumentsView({
             </div>
             <span>个人云端文档管理</span>
           </h2>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
             文件安全存储于 Upstash Blob，具备真实的二进制下载与公开 CDN 直链分发能力。
           </p>
         </div>
@@ -156,7 +156,7 @@ export function DocumentsView({
 
       {/* 液态玻璃文档列表容器 */}
       <div className="rounded-3xl liquid-glass overflow-hidden shadow-md">
-        <div className="grid grid-cols-12 px-6 py-3.5 border-b border-black/5 dark:border-white/10 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">
+        <div className="grid grid-cols-12 px-6 py-3.5 border-b border-black/5 dark:border-white/10 text-[11px] font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider font-mono">
           <div className="col-span-6 sm:col-span-5">文件名与摘要</div>
           <div className="hidden sm:block sm:col-span-2">语义标签</div>
           <div className="col-span-3 sm:col-span-2 text-right sm:text-left">大小 / 日期</div>
@@ -210,7 +210,7 @@ export function DocumentsView({
                       <div className="font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
                         {doc.name}
                       </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                      <div className="text-[11px] text-slate-500 dark:text-slate-300 truncate mt-0.5">
                         {doc.summary}
                       </div>
                     </div>

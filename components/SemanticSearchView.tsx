@@ -120,7 +120,7 @@ export function SemanticSearchView({
             </div>
             <span>Upstash Vector 语义智能检索舱</span>
           </h2>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
             通过高维向量理解自然语言概念内涵，让知识库支持跨表述、跨语种的智能检索与最近邻推荐。
           </p>
         </div>
@@ -175,7 +175,7 @@ export function SemanticSearchView({
 
       {/* 推荐语义检索概念标签 */}
       <div className="space-y-2">
-        <div className="text-[11px] text-slate-400 dark:text-slate-500 uppercase font-bold font-mono tracking-wider">
+        <div className="text-[11px] text-slate-400 dark:text-slate-300 uppercase font-bold font-mono tracking-wider">
           试用演示概念用例 (点击自动执行)：
         </div>
         <div className="flex flex-wrap gap-2.5">
@@ -212,7 +212,7 @@ export function SemanticSearchView({
                 </span>
                 <span className="font-mono text-[11px] font-bold text-rose-500">{traditionalMatches.length} 篇匹配</span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              <p className="text-[11px] text-slate-500 dark:text-slate-300 leading-relaxed">
                 传统搜索必须要求文档中<strong>严格包含您输入的每一个汉字或单词</strong>。当用户用自然语言提问时，字面完全落空，无法匹配近义表述。
               </p>
               <div className="pt-1 text-[11px] text-slate-400 font-mono">
@@ -345,7 +345,7 @@ export function SemanticSearchView({
                 <div className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 truncate">
                   {rec.name}
                 </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                <div className="text-[11px] text-slate-500 dark:text-slate-300 line-clamp-2 leading-relaxed">
                   {rec.summary}
                 </div>
                 <div className="text-[10px] text-slate-400 font-mono pt-1">

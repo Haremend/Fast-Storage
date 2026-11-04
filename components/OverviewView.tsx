@@ -141,7 +141,7 @@ export function OverviewView({
           onClick={() => onSelectTab('documents')}
           className="p-5 rounded-3xl liquid-glass-interactive cursor-pointer group space-y-2"
         >
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-300">
             <span className="text-[11px] font-bold uppercase tracking-wider font-mono">BLOB 存储</span>
             <div className="w-7 h-7 rounded-full liquid-glass-subtle flex items-center justify-center">
               <FolderArchive className="w-4 h-4 text-sky-500" />
@@ -150,7 +150,7 @@ export function OverviewView({
           <div className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white font-mono tabular-nums">
             {documents.length}
           </div>
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 group-hover:text-sky-500 transition-colors pt-1 font-medium">
+          <div className="text-[11px] text-slate-500 dark:text-slate-300 flex items-center gap-1 group-hover:text-sky-500 transition-colors pt-1 font-medium">
             <span>存储与下载中心</span>
             <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
           </div>
@@ -161,7 +161,7 @@ export function OverviewView({
           onClick={() => onSelectTab('search')}
           className="p-5 rounded-3xl liquid-glass-interactive cursor-pointer group space-y-2"
         >
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-300">
             <span className="text-[11px] font-bold uppercase tracking-wider font-mono">VECTOR 向量</span>
             <div className="w-7 h-7 rounded-full liquid-glass-subtle flex items-center justify-center">
               <Sparkles className="w-4 h-4 text-purple-500" />
@@ -170,7 +170,7 @@ export function OverviewView({
           <div className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400 font-mono tabular-nums">
             {documents.filter((d) => d.status === 'indexed').length} <span className="text-xs font-normal text-slate-500">已索引</span>
           </div>
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 group-hover:text-purple-400 transition-colors pt-1 font-medium">
+          <div className="text-[11px] text-slate-500 dark:text-slate-300 flex items-center gap-1 group-hover:text-purple-400 transition-colors pt-1 font-medium">
             <span>余弦智能检索舱</span>
             <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
           </div>
@@ -181,7 +181,7 @@ export function OverviewView({
           onClick={() => onSelectTab('queue')}
           className="p-5 rounded-3xl liquid-glass-interactive cursor-pointer group space-y-2"
         >
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-300">
             <span className="text-[11px] font-bold uppercase tracking-wider font-mono">QSTASH 队列</span>
             <div className="w-7 h-7 rounded-full liquid-glass-subtle flex items-center justify-center">
               <Activity className="w-4 h-4 text-amber-500" />
@@ -190,7 +190,7 @@ export function OverviewView({
           <div className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white font-mono tabular-nums">
             {activeTasks.length > 0 ? `${activeTasks.length} 运行中` : '就绪'}
           </div>
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 group-hover:text-amber-500 transition-colors pt-1 font-medium">
+          <div className="text-[11px] text-slate-500 dark:text-slate-300 flex items-center gap-1 group-hover:text-amber-500 transition-colors pt-1 font-medium">
             <span>异步削峰调度</span>
             <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
           </div>
@@ -201,7 +201,7 @@ export function OverviewView({
           onClick={() => onSelectTab('redis')}
           className="p-5 rounded-3xl liquid-glass-interactive cursor-pointer group space-y-2"
         >
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-300">
             <span className="text-[11px] font-bold uppercase tracking-wider font-mono">REDIS 空间</span>
             <div className="w-7 h-7 rounded-full liquid-glass-subtle flex items-center justify-center">
               <Server className="w-4 h-4 text-emerald-500" />
@@ -210,7 +210,7 @@ export function OverviewView({
           <div className="text-2xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-400 font-mono tabular-nums">
             {status?.cacheStats?.keysCount || 4} <span className="text-xs font-normal text-slate-500">键</span>
           </div>
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 group-hover:text-emerald-500 transition-colors pt-1 font-medium">
+          <div className="text-[11px] text-slate-500 dark:text-slate-300 flex items-center gap-1 group-hover:text-emerald-500 transition-colors pt-1 font-medium">
             <span>原子计数与限流</span>
             <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
           </div>
@@ -221,7 +221,7 @@ export function OverviewView({
           onClick={() => onSelectTab('system')}
           className="p-5 rounded-3xl liquid-glass-interactive cursor-pointer group space-y-2 col-span-2 lg:col-span-1"
         >
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-300">
             <span className="text-[11px] font-bold uppercase tracking-wider font-mono">缓存命中</span>
             <div className="w-7 h-7 rounded-full liquid-glass-subtle flex items-center justify-center">
               <Layers className="w-4 h-4 text-teal-500" />
@@ -230,7 +230,7 @@ export function OverviewView({
           <div className="text-2xl sm:text-3xl font-bold text-teal-600 dark:text-teal-400 font-mono tabular-nums">
             {status?.cacheStats?.hitRatio || '100.0%'}
           </div>
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 group-hover:text-teal-500 transition-colors pt-1 font-medium">
+          <div className="text-[11px] text-slate-500 dark:text-slate-300 flex items-center gap-1 group-hover:text-teal-500 transition-colors pt-1 font-medium">
             <span>架构与连接遥测</span>
             <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
           </div>
@@ -310,7 +310,7 @@ export function OverviewView({
                     <div className="text-xs font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 truncate">
                       {doc.name}
                     </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-300 truncate">
                       {doc.summary}
                     </div>
                   </div>
