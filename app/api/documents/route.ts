@@ -99,6 +99,8 @@ export async function POST(req: NextRequest) {
       success: true,
       document,
       textLike,
+      duplicates: document.duplicates || [],
+      relatedDocs: document.relatedDocs || [],
       message: `Document stored in Upstash Blob${textLike ? '; semantic vector built for 语义检索舱' : ''}.`,
     });
   } catch (error) {

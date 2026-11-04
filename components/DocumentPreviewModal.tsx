@@ -12,6 +12,8 @@ import {
   Cloud,
   Layers,
   Download,
+  AlertTriangle,
+  Link2,
 } from 'lucide-react';
 import { DocumentItem } from '@/lib/types';
 
@@ -134,6 +136,27 @@ export function DocumentPreviewModal({
             </div>
           )}
 
+          {/* 向量库自动检测：疑似重复 */}
+          {document.duplicates && document.duplicates.length > 0 && (
+            <div>
+              <div className="text-[11px] text-slate-400 dark:text-slate-300 font-bold uppercase mb-2 flex items-center gap-1.5 font-mono">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                <span>DUPLICATES / 疑似重复文件 (相似度 ≥ 85%)</span>
+              </div>
+              <div className="space-y-1.5">
+                {document.duplicates.map((dup, idx) => (
+                  <div key={dup.id || idx} className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="font-bold text-amber-800 dark:text-amber-200 truncate">{dup.name}</div>
+                      <div className="text-[10px] text-amber-700 dark:text-amber-300/70">与当前文件语义几乎一致，可能是重复上传</div>
+                    </div>
+                    <span className="font-mono text-[11px] font-bold text-amber-600 dark:text-amber-400 shrink-0">{Math.round(dup.similarity * 100)}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 文档正文与提取文本预览 */}
           <div>
             <div className="text-[11px] text-slate-400 dark:text-slate-300 font-bold uppercase mb-2 flex items-center gap-1.5 font-mono">
@@ -144,6 +167,24 @@ export function DocumentPreviewModal({
               {document.fullText || document.summary || '未提取到正文文本。'}
             </div>
           </div>
+
+          {/* 向量库自动发现的相关文档 (上传时已计算并持久化) */}
+          {document.relatedDocs && document.relatedDocs.length > 0 && (
+            <div>
+              <div className="text-[11px] text-slate-400 dark:text-slate-300 font-bold uppercase mb-2.5 flex items-center gap-1.5 font-mono">
+                <Link2 className="w-3.5 h-3.5 text-sky-500" />
+                <span>RELATED FILES / 语义关联文件 (向量空间临近)</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {document.relatedDocs.map((rel, idx) => (
+                  <div key={rel.id || idx} className="p-3.5 text-left rounded-2xl liquid-glass-interactive">
+                    <div className="text-xs font-bold text-slate-900 dark:text-slate-200 truncate">{rel.name}</div>
+                    <div className="text-[11px] text-sky-600 dark:text-sky-400 font-mono mt-1">{Math.round(rel.similarity * 100)}% 相关</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* 关联智能推荐 */}
           <div>

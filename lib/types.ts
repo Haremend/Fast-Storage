@@ -15,6 +15,12 @@ export interface AuthUser {
   loginTime: string;
 }
 
+export interface SimilarDocRef {
+  id: string;
+  name: string;
+  similarity: number;
+}
+
 export interface DocumentItem {
   id: string;
   name: string;
@@ -29,6 +35,10 @@ export interface DocumentItem {
   vectorId?: string;
   contentSnippet?: string;
   fullText?: string;
+  /** 高度相似（similarity ≥ 0.85），疑似重复上传 */
+  duplicates?: SimilarDocRef[];
+  /** 语义相关（0.45 ≤ similarity < 0.85），推荐关联阅读 */
+  relatedDocs?: SimilarDocRef[];
 }
 
 export interface SearchResultItem {

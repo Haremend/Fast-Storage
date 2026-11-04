@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Upload, FileText, Check, RefreshCw, Tag, AlignLeft, Sparkles, Folder } from 'lucide-react';
-import { DocumentItem } from '@/lib/types';
+import { X, Upload, FileText, Check, RefreshCw, Tag, AlignLeft, Sparkles, Folder, AlertTriangle, Link } from 'lucide-react';
+import { DocumentItem, SimilarDocRef } from '@/lib/types';
 
 type BlobFolder = 'avatars' | 'documents' | 'wallpapers' | 'temp';
 
@@ -31,6 +31,8 @@ export function UploadModal({
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [successInfo, setSuccessInfo] = useState<{ message: string } | null>(null);
+  const [dupWarning, setDupWarning] = useState<SimilarDocRef | null>(null);
+  const [relatedDocs, setRelatedDocs] = useState<SimilarDocRef[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // 快速文本编辑模式
@@ -53,6 +55,8 @@ export function UploadModal({
     setIsUploading(true);
     setErrorMessage(null);
     setSuccessInfo(null);
+    setDupWarning(null);
+    setRelatedDocs([]);
 
     try {
       let res: Response;
@@ -99,6 +103,13 @@ export function UploadModal({
           ? '文档已存入 Upstash Blob，并已同步建立语义向量索引！'
           : '文档已存入 Upstash Blob！',
       });
+      // 向量库自动发现：疑似重复 + 相关文档
+      if (Array.isArray(data.duplicates) && data.duplicates.length > 0) {
+        setDupWarning(data.duplicates[0]);
+      }
+      if (Array.isArray(data.relatedDocs)) {
+        setRelatedDocs(data.relatedDocs.slice(0, 3));
+      }
 
       setTimeout(() => {
         onClose();
@@ -295,6 +306,35 @@ export function UploadModal({
                 <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span>{successInfo.message}</span>
               </div>
+            </div>
+          )}
+
+          {/* 向量库自动检测：疑似重复 */}
+          {dupWarning && (
+            <div className="p-3.5 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-800 dark:text-amber-300 text-xs space-y-1">
+              <div className="flex items-center gap-2 font-bold">
+                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                <span>检测到高度相似文件（{Math.round(dupWarning.similarity * 100)}% 相似）</span>
+              </div>
+              <div className="text-[11px] pl-6 leading-relaxed">
+                与 <strong>{dupWarning.name}</strong> 语义几乎一致，可能是重复上传。如需替换可在文件管理中删除旧文件。
+              </div>
+            </div>
+          )}
+
+          {/* 向量库自动检测：相关文档 */}
+          {relatedDocs.length > 0 && (
+            <div className="p-3.5 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-700 dark:text-sky-300 text-xs space-y-1.5">
+              <div className="flex items-center gap-2 font-bold">
+                <Link className="w-4 h-4 text-sky-500 shrink-0" />
+                <span>语义相关文档（向量空间临近）</span>
+              </div>
+              {relatedDocs.map((doc, idx) => (
+                <div key={doc.id || idx} className="text-[11px] pl-6 text-slate-700 dark:text-slate-300">
+                  <span className="font-semibold">{doc.name}</span>
+                  <span className="text-slate-500 dark:text-slate-400"> · {Math.round(doc.similarity * 100)}% 相关</span>
+                </div>
+              ))}
             </div>
           )}
 

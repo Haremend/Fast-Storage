@@ -334,8 +334,13 @@ export function DocumentsView({
                       <FileText className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <div className="font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
-                        {doc.name}
+                      <div className="font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate flex items-center gap-2">
+                        <span className="truncate">{doc.name}</span>
+                        {doc.duplicates && doc.duplicates.length > 0 && (
+                          <span className="shrink-0 text-[9px] font-bold text-amber-700 dark:text-amber-300 bg-amber-500/20 border border-amber-500/40 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                            疑似重复 {Math.round(doc.duplicates[0].similarity * 100)}%
+                          </span>
+                        )}
                       </div>
                       <div className="text-[11px] text-slate-600 dark:text-slate-300 truncate mt-0.5">
                         {doc.summary}

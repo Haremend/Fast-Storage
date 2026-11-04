@@ -98,6 +98,8 @@ export const DocumentService = {
         vectorId: cached?.vectorId,
         contentSnippet: cached?.contentSnippet,
         fullText: cached?.fullText,
+        duplicates: cached?.duplicates,
+        relatedDocs: cached?.relatedDocs,
       };
     });
 
@@ -130,6 +132,8 @@ export const DocumentService = {
       vectorId: cached?.vectorId,
       contentSnippet: cached?.contentSnippet,
       fullText: cached?.fullText,
+      duplicates: cached?.duplicates,
+      relatedDocs: cached?.relatedDocs,
     };
   },
 
@@ -173,22 +177,44 @@ export const DocumentService = {
     const index = await RedisService.get<Record<string, Partial<DocumentItem>>>(REDIS_BLOB_INDEX_KEY);
     const indexMap: Record<string, Partial<DocumentItem>> =
       index && typeof index === 'object' ? index : {};
+
+    // 3. Build the semantic vector synchronously so the file is immediately
+    //    usable for dedup / recommendations / search.
+    const vectorId = await VectorService.upsertDocument(doc, fullText || doc.summary);
+    doc.vectorId = vectorId;
+    doc.status = 'indexed';
+
+    // 4. Immediately find the most similar existing documents (upstash
+    //    built-in embedding → cosine). Thresholds: ≥ 0.85 likely dup,
+    //    ≥ 0.45 related. Store on the document + Redis index.
+    let duplicates: { id: string; name: string; similarity: number }[] = [];
+    let related: { id: string; name: string; similarity: number }[] = [];
+    if (fullText) {
+      const hits = await VectorService.query(fullText, 8);
+      for (const hit of hits) {
+        if (hit.metadata?.docId === doc.id) continue;
+        const sim = Number(hit.score);
+        const target = { id: hit.metadata?.docId || '', name: hit.metadata?.name || '', similarity: sim };
+        if (!target.id) continue;
+        if (sim >= 0.85) duplicates.push(target);
+        else if (sim >= 0.45) related.push(target);
+      }
+      duplicates.sort((a, b) => b.similarity - a.similarity);
+      related.sort((a, b) => b.similarity - a.similarity);
+      doc.duplicates = duplicates;
+      doc.relatedDocs = related;
+    }
+
     indexMap[doc.id] = {
       type: contentType,
       summary,
       tags,
       fullText: doc.fullText,
-      status: 'processing',
+      status: 'indexed',
+      vectorId: doc.vectorId,
+      duplicates,
+      relatedDocs: related,
     };
-    await RedisService.set(REDIS_BLOB_INDEX_KEY, indexMap, 86400 * 30);
-
-    // 3. Build the semantic vector synchronously (fast — no queue hop needed),
-    //    so text files are immediately searchable in 语义检索舱.
-    const vectorId = await VectorService.upsertDocument(doc, fullText || doc.summary);
-    doc.vectorId = vectorId;
-    doc.status = 'indexed';
-    indexMap[doc.id].vectorId = vectorId;
-    indexMap[doc.id].status = 'indexed';
     await RedisService.set(REDIS_BLOB_INDEX_KEY, indexMap, 86400 * 30);
 
     return { document: doc, taskId: `vec_${vectorId}`, textLike };

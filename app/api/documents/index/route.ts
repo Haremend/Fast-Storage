@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { BlobService } from '@/lib/services/blob';
 import { VectorService } from '@/lib/services/vector';
 import { DocumentService } from '@/lib/services/documents';
+import { RedisService } from '@/lib/services/redis';
+
+const REDIS_BLOB_INDEX_KEY = 'blob:documents:index';
 
 /**
  * POST /api/documents/index  { key: string }
@@ -56,24 +59,41 @@ export async function POST(req: NextRequest) {
       fullText
     );
 
-    // Refresh the cached metadata so the status shows indexed next load
-    const index = await (await import('@/lib/services/redis')).RedisService.get<Record<string, unknown>>(
-      'blob:documents:index'
-    );
+    // Refresh the cached metadata + recompute duplicates/related (same as upload path)
+    const index = await RedisService.get<Record<string, unknown>>(REDIS_BLOB_INDEX_KEY);
     const indexMap = index && typeof index === 'object' ? index : {};
+
+    let duplicates: { id: string; name: string; similarity: number }[] = [];
+    let related: { id: string; name: string; similarity: number }[] = [];
+    const hits = await VectorService.query(fullText, 8);
+    for (const hit of hits) {
+      if (hit.metadata?.docId === key) continue;
+      const sim = Number(hit.score);
+      const target = { id: hit.metadata?.docId || '', name: hit.metadata?.name || '', similarity: sim };
+      if (!target.id) continue;
+      if (sim >= 0.85) duplicates.push(target);
+      else if (sim >= 0.45) related.push(target);
+    }
+    duplicates.sort((a, b) => b.similarity - a.similarity);
+    related.sort((a, b) => b.similarity - a.similarity);
+
     indexMap[key] = {
       ...(indexMap[key] || {}),
       vectorId,
       status: 'indexed',
       fullText,
       contentSnippet: fullText.slice(0, 220),
+      duplicates,
+      relatedDocs: related,
     };
-    await (await import('@/lib/services/redis')).RedisService.set('blob:documents:index', indexMap, 86400 * 30);
+    await RedisService.set(REDIS_BLOB_INDEX_KEY, indexMap, 86400 * 30);
 
     return NextResponse.json({
       success: true,
       vectorId,
       textLike: true,
+      duplicates,
+      relatedDocs: related,
       query: `${name.replace(/\.[^/.]+$/, '')} ${fullText.slice(0, 80)}`.trim().slice(0, 120),
     });
   } catch (error) {
