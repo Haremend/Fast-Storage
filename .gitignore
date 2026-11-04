@@ -47,3 +47,6 @@ Thumbs.db
 CLAUDE.md
 # Build artifacts
 *.tsbuildinfo
+
+# npm lockfile (repo uses bun.lock)
+package-lock.json
