@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
     let fileBuffer: Buffer;
     let summary: string | undefined;
     let tags: string[] = ['个人', '上传'];
+    let folder: 'avatars' | 'documents' | 'wallpapers' | 'temp' = 'documents';
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await req.formData();
@@ -68,6 +69,10 @@ export async function POST(req: NextRequest) {
       if (formTags) {
         tags = formTags.split(',').map((t) => t.trim()).filter(Boolean);
       }
+      const formFolder = (formData.get('folder') as string) || 'documents';
+      if (['avatars', 'documents', 'wallpapers', 'temp'].includes(formFolder)) {
+        folder = formFolder as 'avatars' | 'documents' | 'wallpapers' | 'temp';
+      }
     } else {
       // JSON payload upload
       const body = await req.json();
@@ -76,6 +81,9 @@ export async function POST(req: NextRequest) {
       fileBuffer = Buffer.from(body.content || '');
       summary = body.summary;
       if (Array.isArray(body.tags)) tags = body.tags;
+      if (typeof body.folder === 'string' && ['avatars', 'documents', 'wallpapers', 'temp'].includes(body.folder)) {
+        folder = body.folder as 'avatars' | 'documents' | 'wallpapers' | 'temp';
+      }
     }
 
     const { document, textLike } = await DocumentService.uploadDocument({
@@ -84,6 +92,7 @@ export async function POST(req: NextRequest) {
       contentType: mimeType,
       summary,
       tags,
+      folder,
     });
 
     return NextResponse.json({

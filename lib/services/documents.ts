@@ -139,15 +139,16 @@ export const DocumentService = {
     contentType: string;
     summary?: string;
     tags?: string[];
+    folder?: 'avatars' | 'documents' | 'wallpapers' | 'temp';
   }): Promise<{ document: DocumentItem; taskId: string; textLike: boolean }> {
-    const { name, buffer, contentType, tags = ['个人', '上传'] } = options;
+    const { name, buffer, contentType, tags = ['个人', '上传'], folder = 'documents' } = options;
 
-    // 1. Store in Upstash Blob
+    // 1. Store in Upstash Blob (按用户选择的分类存放)
     const blobResult = await BlobService.put({
       filename: name,
       data: buffer,
       contentType,
-      folder: 'documents',
+      folder,
     });
 
     const textLike = contentType.startsWith('text/') || /\.md|\.txt|\.csv|\.json$/i.test(name);

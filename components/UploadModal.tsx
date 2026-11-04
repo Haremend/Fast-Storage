@@ -1,8 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Upload, FileText, Check, RefreshCw, Tag, AlignLeft, Sparkles } from 'lucide-react';
+import { X, Upload, FileText, Check, RefreshCw, Tag, AlignLeft, Sparkles, Folder } from 'lucide-react';
 import { DocumentItem } from '@/lib/types';
+
+type BlobFolder = 'avatars' | 'documents' | 'wallpapers' | 'temp';
+
+const FOLDER_OPTIONS: { id: BlobFolder; label: string; desc: string }[] = [
+  { id: 'documents', label: 'Documents', desc: '个人文档 / 笔记' },
+  { id: 'wallpapers', label: 'Wallpapers', desc: '背景壁纸图片' },
+  { id: 'avatars', label: 'Avatars', desc: '个人头像' },
+  { id: 'temp', label: 'Temp', desc: '临时文件' },
+];
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -18,6 +27,7 @@ export function UploadModal({
   const [file, setFile] = useState<File | null>(null);
   const [tags, setTags] = useState('个人文档, 架构设计');
   const [summary, setSummary] = useState('');
+  const [folder, setFolder] = useState<BlobFolder>('documents');
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [successInfo, setSuccessInfo] = useState<{ message: string } | null>(null);
@@ -58,6 +68,7 @@ export function UploadModal({
             type: 'text/markdown',
             summary: summary || textContent.slice(0, 140).replace(/\n/g, ' '),
             tags: tags.split(/[,，]/).map((t) => t.trim()).filter(Boolean),
+            folder,
           }),
         });
       } else {
@@ -69,6 +80,7 @@ export function UploadModal({
         formData.append('file', file);
         if (summary) formData.append('summary', summary);
         if (tags) formData.append('tags', tags);
+        formData.append('folder', folder);
 
         res = await fetch('/api/documents', {
           method: 'POST',
@@ -106,7 +118,7 @@ export function UploadModal({
             <div className="w-8 h-8 rounded-2xl liquid-glass-subtle flex items-center justify-center text-emerald-600 dark:text-emerald-400">
               <FileText className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">上传文档至云端存储</h3>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">上传文件至云端存储</h3>
           </div>
           <button
             onClick={onClose}
@@ -144,6 +156,31 @@ export function UploadModal({
         </div>
 
         <form onSubmit={handleUpload} className="p-6 space-y-4">
+          {/* 分类选择（决定文件存到 Upstash Blob 的哪个文件夹） */}
+          <div>
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              <Folder className="w-3.5 h-3.5 text-emerald-500" />
+              <span>存储分类 (Upstash Blob 文件夹)</span>
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {FOLDER_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setFolder(opt.id)}
+                  className={`rounded-xl px-3 py-2.5 text-left transition-all cursor-pointer border ${
+                    folder === opt.id
+                      ? 'liquid-pill-primary shadow-md border-transparent'
+                      : 'liquid-glass-subtle border-white/40 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:border-emerald-400/40'
+                  }`}
+                >
+                  <div className={`text-xs font-bold ${folder === opt.id ? 'text-black' : ''}`}>{opt.label}</div>
+                  <div className={`text-[10px] ${folder === opt.id ? 'text-slate-700' : 'text-slate-400 dark:text-slate-300'}`}>{opt.desc}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {!isTextMode ? (
             /* 拖拽上传区域 */
             <div
