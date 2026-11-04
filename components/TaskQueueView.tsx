@@ -152,26 +152,26 @@ export function TaskQueueView() {
       {/* 头部标题与操作 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <Activity className="w-5 h-5 text-amber-500" />
-            <span>QStash 异步任务队列与削峰机制</span>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-2xl liquid-glass-subtle flex items-center justify-center">
+              <Activity className="w-4 h-4 text-amber-500" />
+            </div>
+            <span>QStash 异步任务队列与削峰调度</span>
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            通过 Serverless 消息队列将繁重的文档处理与向量嵌入移出主线程，确保用户上传与交互秒级响应。
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+            通过 Serverless 消息队列将繁重的文档处理与向量嵌入移出主线程，确保用户上传与交互秒级极速响应。
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setAutoPoll(!autoPoll)}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all ios-press flex items-center gap-1.5 ${
-              autoPoll
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
-                : 'ios-glass text-slate-500'
+            className={`liquid-pill px-3.5 py-2 text-xs font-semibold cursor-pointer flex items-center gap-2 ${
+              autoPoll ? 'border-amber-500/40 text-amber-600 dark:text-amber-400' : 'text-slate-500'
             }`}
           >
             <span
-              className={`w-1.5 h-1.5 rounded-full ${
+              className={`w-2 h-2 rounded-full ${
                 autoPoll ? 'bg-amber-500 animate-pulse' : 'bg-slate-400'
               }`}
             />
@@ -184,7 +184,7 @@ export function TaskQueueView() {
               fetchTasks();
             }}
             disabled={isRefreshing}
-            className="p-2 text-xs font-medium text-slate-700 dark:text-slate-200 ios-glass hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all ios-press"
+            className="liquid-orb w-8 h-8 text-slate-600 dark:text-slate-300 hover:text-amber-500 cursor-pointer"
             title="手动刷新"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -192,7 +192,7 @@ export function TaskQueueView() {
 
           <button
             onClick={handleTriggerSingleJob}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 ios-glass hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all ios-press whitespace-nowrap"
+            className="liquid-pill px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
           >
             <Play className="w-3.5 h-3.5 fill-current text-amber-500" />
             <span>单项触发</span>
@@ -201,7 +201,8 @@ export function TaskQueueView() {
           <button
             onClick={handleTriggerBatchConcurrency}
             disabled={isBatchRunning}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-amber-500 hover:bg-amber-400 active:scale-[0.98] rounded-xl shadow-md shadow-amber-500/20 transition-all whitespace-nowrap"
+            className="liquid-pill px-4 py-2 text-xs font-semibold text-white cursor-pointer flex items-center gap-1.5 whitespace-nowrap shadow-md shadow-amber-500/20"
+            style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
           >
             <Rocket className="w-3.5 h-3.5" />
             <span>{isBatchRunning ? '发射中...' : '并发压测 (5任务)'}</span>
@@ -210,38 +211,38 @@ export function TaskQueueView() {
       </div>
 
       {/* QStash 异步工作流原理解释卡片 */}
-      <div className="p-5 rounded-3xl ios-glass border border-amber-500/20 shadow-xs space-y-3">
+      <div className="p-6 rounded-3xl liquid-glass border border-amber-500/30 shadow-md space-y-4">
         <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
           <ShieldCheck className="w-4 h-4 text-amber-500" />
           <span>为什么要使用 QStash 异步队列？（高并发与 Serverless 保护）</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-          <div className="p-3 rounded-2xl bg-black/5 dark:bg-white/5 space-y-1">
-            <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div className="p-4 rounded-2xl liquid-glass-subtle space-y-1.5">
+            <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-emerald-500" />
               <span>1. 极速前端响应 (&lt;100ms)</span>
             </div>
-            <p className="text-[11px] text-slate-500 leading-relaxed">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
               文件上传后立即返回成功，避免用户在浏览器端长时间等待向量计算与文档解析。
             </p>
           </div>
 
-          <div className="p-3 rounded-2xl bg-black/5 dark:bg-white/5 space-y-1">
-            <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-500" />
+          <div className="p-4 rounded-2xl liquid-glass-subtle space-y-1.5">
+            <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+              <Zap className="w-4 h-4 text-amber-500" />
               <span>2. 削峰防击穿与超时保护</span>
             </div>
-            <p className="text-[11px] text-slate-500 leading-relaxed">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
               Vercel 函数默认有 10-15s 超时限制。QStash 充当蓄水池平滑消费，避免同时触发大量昂贵 API 导致崩溃。
             </p>
           </div>
 
-          <div className="p-3 rounded-2xl bg-black/5 dark:bg-white/5 space-y-1">
-            <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-              <RotateCcw className="w-3.5 h-3.5 text-sky-500" />
+          <div className="p-4 rounded-2xl liquid-glass-subtle space-y-1.5">
+            <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+              <RotateCcw className="w-4 h-4 text-sky-500" />
               <span>3. 失败指数退避自动重试</span>
             </div>
-            <p className="text-[11px] text-slate-500 leading-relaxed">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
               若因第三方网络波动失败，QStash 会自动按梯度延迟（指数退避）重试，彻底杜绝数据丢失。
             </p>
           </div>
@@ -249,41 +250,41 @@ export function TaskQueueView() {
       </div>
 
       {/* 5 项核心指标条 */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="p-4 rounded-2xl ios-glass">
-          <div className="text-[11px] text-slate-400 font-semibold uppercase">队列总任务</div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white font-mono tabular-nums mt-1">{stats.total}</div>
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
+        <div className="p-5 rounded-3xl liquid-glass-interactive">
+          <div className="text-[11px] text-slate-400 font-bold uppercase font-mono">队列总任务</div>
+          <div className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white font-mono tabular-nums mt-1">{stats.total}</div>
         </div>
-        <div className="p-4 rounded-2xl ios-glass">
-          <div className="text-[11px] text-amber-500 font-semibold uppercase">正在处理</div>
-          <div className="text-2xl font-bold text-amber-500 font-mono tabular-nums mt-1">{stats.processing}</div>
+        <div className="p-5 rounded-3xl liquid-glass-interactive">
+          <div className="text-[11px] text-amber-500 font-bold uppercase font-mono">正在处理</div>
+          <div className="text-2xl sm:text-3xl font-bold text-amber-500 font-mono tabular-nums mt-1">{stats.processing}</div>
         </div>
-        <div className="p-4 rounded-2xl ios-glass">
-          <div className="text-[11px] text-sky-500 font-semibold uppercase">排队等待</div>
-          <div className="text-2xl font-bold text-sky-500 font-mono tabular-nums mt-1">{stats.pending}</div>
+        <div className="p-5 rounded-3xl liquid-glass-interactive">
+          <div className="text-[11px] text-sky-500 font-bold uppercase font-mono">排队等待</div>
+          <div className="text-2xl sm:text-3xl font-bold text-sky-500 font-mono tabular-nums mt-1">{stats.pending}</div>
         </div>
-        <div className="p-4 rounded-2xl ios-glass">
-          <div className="text-[11px] text-emerald-500 font-semibold uppercase">成功完成</div>
-          <div className="text-2xl font-bold text-emerald-500 font-mono tabular-nums mt-1">{stats.completed}</div>
+        <div className="p-5 rounded-3xl liquid-glass-interactive">
+          <div className="text-[11px] text-emerald-500 font-bold uppercase font-mono">成功完成</div>
+          <div className="text-2xl sm:text-3xl font-bold text-emerald-500 font-mono tabular-nums mt-1">{stats.completed}</div>
         </div>
-        <div className="p-4 rounded-2xl ios-glass">
-          <div className="text-[11px] text-red-500 font-semibold uppercase">异常失败</div>
-          <div className="text-2xl font-bold text-red-500 font-mono tabular-nums mt-1">{stats.failed}</div>
+        <div className="p-5 rounded-3xl liquid-glass-interactive">
+          <div className="text-[11px] text-rose-500 font-bold uppercase font-mono">异常失败</div>
+          <div className="text-2xl sm:text-3xl font-bold text-rose-500 font-mono tabular-nums mt-1">{stats.failed}</div>
         </div>
       </div>
 
       {/* 任务流水表 */}
-      <div className="rounded-3xl ios-glass overflow-hidden shadow-xs border border-white/60 dark:border-white/10">
-        <div className="flex items-center justify-between px-6 py-3.5 border-b border-black/5 dark:border-white/5">
-          <div className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-            <Layers className="w-3.5 h-3.5 text-amber-500" />
-            <span>异步调度任务流 (QStash Pipeline)</span>
+      <div className="rounded-3xl liquid-glass overflow-hidden shadow-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-black/5 dark:border-white/10">
+          <div className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 font-mono">
+            <Layers className="w-4 h-4 text-amber-500" />
+            <span>QSTASH PIPELINE STREAM / 异步调度任务流</span>
           </div>
 
           {stats.completed > 0 && (
             <button
               onClick={handleClearCompleted}
-              className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center gap-1.5 transition-colors"
+              className="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer font-semibold"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>清理已完成</span>
@@ -292,32 +293,40 @@ export function TaskQueueView() {
         </div>
 
         {tasks.length === 0 ? (
-          <div className="p-10 text-center text-slate-400 text-xs">
+          <div className="p-12 text-center text-slate-400 text-xs">
             当前队列为空。点击上方&ldquo;并发压测 (5任务)&rdquo;按钮可观察任务批量推入、排队与执行的实时动画过程。
           </div>
         ) : (
-          <div className="divide-y divide-black/5 dark:divide-white/5">
+          <div className="divide-y divide-black/5 dark:divide-white/10">
             {tasks.map((task) => (
               <div
                 key={task.id}
-                className="grid grid-cols-12 items-center px-6 py-3.5 text-xs hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                className="grid grid-cols-12 items-center px-6 py-4 text-xs hover:bg-white/40 dark:hover:bg-white/5 transition-colors"
               >
                 {/* 状态与名称 */}
-                <div className="col-span-5 sm:col-span-4 flex items-center gap-3 truncate">
+                <div className="col-span-5 sm:col-span-4 flex items-center gap-3.5 truncate">
                   {task.status === 'completed' && (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <div className="w-7 h-7 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    </div>
                   )}
                   {task.status === 'processing' && (
-                    <RefreshCw className="w-4 h-4 text-amber-500 animate-spin shrink-0" />
+                    <div className="w-7 h-7 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
+                      <RefreshCw className="w-4 h-4 text-amber-500 animate-spin" />
+                    </div>
                   )}
                   {task.status === 'pending' && (
-                    <Clock className="w-4 h-4 text-sky-500 shrink-0" />
+                    <div className="w-7 h-7 rounded-full bg-sky-500/15 flex items-center justify-center shrink-0">
+                      <Clock className="w-4 h-4 text-sky-500" />
+                    </div>
                   )}
                   {task.status === 'failed' && (
-                    <Zap className="w-4 h-4 text-red-500 shrink-0" />
+                    <div className="w-7 h-7 rounded-full bg-rose-500/15 flex items-center justify-center shrink-0">
+                      <Zap className="w-4 h-4 text-rose-500" />
+                    </div>
                   )}
                   <div className="truncate">
-                    <div className="font-semibold text-slate-900 dark:text-white truncate">
+                    <div className="font-bold text-slate-900 dark:text-white truncate">
                       {task.docName || task.id}
                     </div>
                     <div className="text-[11px] text-slate-400 font-mono truncate">
@@ -327,7 +336,7 @@ export function TaskQueueView() {
                 </div>
 
                 {/* 任务类型 */}
-                <div className="hidden sm:block sm:col-span-3 text-[11px] font-mono text-slate-500">
+                <div className="hidden sm:block sm:col-span-3 text-[11px] font-mono text-slate-500 dark:text-slate-400">
                   {task.taskType === 'extract_and_embed'
                     ? '向量提取与索引'
                     : task.taskType === 'generate_summary'
@@ -347,17 +356,17 @@ export function TaskQueueView() {
                   {task.status === 'failed' && (
                     <button
                       onClick={() => handleRetry(task.id)}
-                      className="px-2.5 py-1 text-[11px] font-semibold text-amber-600 bg-amber-500/10 border border-amber-500/20 rounded-lg hover:bg-amber-500/20 transition-all inline-flex items-center gap-1 ios-press"
+                      className="liquid-pill px-3 py-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 cursor-pointer inline-flex items-center gap-1"
                     >
                       <RotateCcw className="w-3 h-3" />
                       <span>重试</span>
                     </button>
                   )}
                   {task.status === 'completed' && (
-                    <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">200 OK</span>
+                    <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">200 OK</span>
                   )}
                   {task.status === 'processing' && (
-                    <span className="text-[11px] font-mono text-amber-500 font-semibold">处理中</span>
+                    <span className="text-[11px] font-mono text-amber-500 font-bold">处理中</span>
                   )}
                 </div>
               </div>

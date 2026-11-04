@@ -12,6 +12,7 @@ import {
   Sun,
   Moon,
   Server,
+  Palette,
 } from 'lucide-react';
 import { UserSession } from '@/lib/types';
 
@@ -20,6 +21,7 @@ interface TopBarProps {
   onSelectTab: (tab: string) => void;
   onOpenUpload: () => void;
   onOpenAvatar: () => void;
+  onOpenWallpaper: () => void;
   session: UserSession | null;
   username?: string;
   onLogout: () => void;
@@ -32,6 +34,7 @@ export function TopBar({
   onSelectTab,
   onOpenUpload,
   onOpenAvatar,
+  onOpenWallpaper,
   session,
   username = 'admin',
   onLogout,
@@ -48,68 +51,88 @@ export function TopBar({
   ];
 
   return (
-    <header className="sticky top-0 z-40 px-6 py-3 ios-glass border-b border-slate-200/80 dark:border-white/10 shadow-xs transition-colors">
-      <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-8">
-        {/* 区域 1: iOS 风格品牌字标 */}
+    <header className="sticky top-3 z-40 px-3 sm:px-6">
+      <div className="max-w-[1600px] mx-auto liquid-glass rounded-3xl px-4 sm:px-6 py-3 flex items-center justify-between gap-4 transition-all duration-300 border border-white/30 dark:border-white/20">
+        {/* 区域 1: iOS 27 液态玻璃品牌字标 (金属银灰拉丝高光质感) */}
         <div className="flex items-center gap-3 shrink-0">
           <button
             onClick={() => onSelectTab('overview')}
-            className="flex items-center gap-2.5 text-slate-900 dark:text-white font-bold text-base tracking-tight hover:opacity-80 transition-opacity"
+            className="flex items-center gap-3 text-slate-900 dark:text-white font-bold text-base tracking-tight hover:opacity-90 transition-all cursor-pointer group"
           >
-            <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
-              <span className="w-2.5 h-2.5 bg-white rounded-full" />
+            <div className="relative w-8 h-8 rounded-2xl bg-gradient-to-tr from-slate-200 via-zinc-100 to-slate-400 flex items-center justify-center text-slate-900 shadow-lg shadow-black/20 border border-white/80 transition-transform duration-300 group-hover:scale-105">
+              <span className="w-2.5 h-2.5 bg-slate-900 rounded-full shadow-xs" />
+              <div className="absolute inset-0 rounded-2xl bg-white/30 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
-            <span className="font-semibold">Fast Storage</span>
+            <div className="flex flex-col text-left">
+              <span className="font-bold text-sm tracking-tight text-slate-900 dark:text-white leading-none">
+                Fast Storage
+              </span>
+              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-300 font-mono tracking-wider opacity-85 mt-0.5">
+                LIQUID CLOUD
+              </span>
+            </div>
           </button>
         </div>
 
-        {/* 区域 2: 4-6 个 iOS 磨砂导航胶囊 */}
-        <nav className="hidden xl:flex items-center gap-1.5 p-1 bg-black/5 dark:bg-white/5 rounded-2xl border border-slate-200/60 dark:border-white/5">
+        {/* 区域 2: 液态悬浮胶囊导航 (选中状态为高级银灰色) */}
+        <nav className="hidden xl:flex items-center gap-1.5 p-1.5 rounded-full liquid-glass-subtle">
           {navItems.map((item) => {
+            const Icon = item.icon;
             const isActive = currentTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => onSelectTab(item.id)}
-                className={`px-3.5 py-1.5 text-xs font-medium rounded-xl whitespace-nowrap transition-all ${
+                className={`flex items-center gap-2 px-4 py-1.5 text-xs font-bold rounded-full whitespace-nowrap transition-all duration-200 cursor-pointer ${
                   isActive
-                    ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-semibold shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'liquid-pill-primary shadow-md text-slate-950 font-bold'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/30 dark:hover:bg-white/10'
                 }`}
               >
-                {item.label}
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-black font-bold' : 'opacity-70'}`} />
+                <span>{item.label}</span>
               </button>
             );
           })}
         </nav>
 
-        {/* 区域 3: iOS 核心动作区 */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        {/* 区域 3: 核心动作区 (背景上传与切换、主题切换、上传文档、个人头像、登出) */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          {/* 背景壁纸切换与自定义上传按钮 */}
+          <button
+            onClick={onOpenWallpaper}
+            title="更换背景壁纸 / 上传自定义图片"
+            className="liquid-pill flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer hover:border-purple-400/50"
+          >
+            <Palette className="w-3.5 h-3.5 text-purple-400" />
+            <span className="hidden sm:inline">壁纸</span>
+          </button>
+
           {/* 主题切换按钮 */}
           <button
             onClick={onToggleTheme}
             title={isDarkMode ? '切换为亮色模式' : '切换为暗色模式'}
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10 transition-colors ios-press"
+            className="w-9 h-9 rounded-full liquid-orb text-slate-600 dark:text-slate-300 transition-transform cursor-pointer"
           >
-            {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+            {isDarkMode ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-slate-700" />}
           </button>
 
-          {/* 上传文档按钮 */}
+          {/* 上传文档按钮 (银灰色按键) */}
           <button
             onClick={onOpenUpload}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] rounded-xl shadow-md shadow-emerald-500/20 transition-all whitespace-nowrap"
+            className="liquid-pill-primary flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold rounded-full shadow-lg shadow-black/25 cursor-pointer whitespace-nowrap"
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>上传文档</span>
+            <span className="hidden xs:inline">上传文档</span>
           </button>
 
           {/* 用户头像与信息 */}
           <button
             onClick={onOpenAvatar}
             title="个人资料与头像"
-            className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors group"
+            className="liquid-pill flex items-center gap-2 pl-1.5 pr-2.5 sm:pr-3 py-1 cursor-pointer group"
           >
-            <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-emerald-500/40 bg-slate-200 dark:bg-slate-800 shrink-0">
+            <div className="w-7 h-7 rounded-full overflow-hidden ring-2 ring-white/50 bg-slate-200 dark:bg-purple-950/60 shrink-0 shadow-xs">
               {session?.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -119,12 +142,12 @@ export function TopBar({
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-300">
+                <div className="w-full h-full flex items-center justify-center text-xs font-bold text-slate-800 dark:text-slate-100">
                   {username.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
-            <span className="hidden sm:inline-block text-xs font-medium text-slate-700 dark:text-slate-300 max-w-[80px] truncate">
+            <span className="hidden sm:inline-block text-xs font-semibold text-slate-700 dark:text-slate-200 max-w-[85px] truncate">
               {username}
             </span>
           </button>
@@ -132,8 +155,8 @@ export function TopBar({
           {/* 安全登出 */}
           <button
             onClick={onLogout}
-            title="退出管理员登录"
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors ios-press"
+            title="退出登录"
+            className="w-9 h-9 rounded-full liquid-orb text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
           </button>

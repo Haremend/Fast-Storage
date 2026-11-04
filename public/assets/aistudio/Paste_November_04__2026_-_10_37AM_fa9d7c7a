@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07150d">
+<title>iOS Liquid Glass UI Demo</title>
+<style>
+  :root{
+    color-scheme:dark;
+    --glass-white:rgba(255,255,255,.17);
+    --glass-stroke:rgba(255,255,255,.36);
+    --ease:cubic-bezier(.2,.8,.2,1);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:#050a07;color:#fff}
+  button{font:inherit;color:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  button:focus-visible,input:focus-visible{outline:2px solid #83e8ac;outline-offset:4px}
+  .demo-section{position:relative;min-height:100svh;overflow:hidden;isolation:isolate;display:flex;align-items:center;justify-content:center;padding:64px 5vw}
+  .section-tag{position:absolute;top:28px;left:clamp(20px,5vw,76px);z-index:5;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.58)}
+
+  /* Shared liquid-glass surface */
+  .liquid-glass{position:relative;isolation:isolate;background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.075) 38%,rgba(255,255,255,.13));border:1px solid rgba(255,255,255,.34);box-shadow:0 24px 80px rgba(0,0,0,.24),inset 0 1px 1px rgba(255,255,255,.56),inset 0 -1px 1px rgba(255,255,255,.12);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%)}
+  .liquid-glass:before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,.26),transparent 22%,transparent 67%,rgba(255,255,255,.11));opacity:.68;z-index:-1}
+  .liquid-glass:after{content:"";position:absolute;inset:1px;border-radius:inherit;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.09)}
+
+  /* Scene 1 — dark botanical music player */
+  .forest-scene{background:radial-gradient(ellipse at 50% 45%,#14552a 0,#082513 42%,#020805 100%)}
+  .fern-wallpaper{position:absolute;inset:-5%;z-index:-2;overflow:hidden;opacity:.96;background:
+    radial-gradient(ellipse at 18% 25%,rgba(0,165,56,.55),transparent 30%),
+    radial-gradient(ellipse at 78% 36%,rgba(0,132,45,.56),transparent 33%),
+    radial-gradient(ellipse at 50% 90%,rgba(24,117,38,.55),transparent 36%),
+    linear-gradient(120deg,#020905,#073315 46%,#020805)}
+  .fern-wallpaper svg{width:100%;height:100%;position:absolute;inset:0;filter:drop-shadow(0 9px 13px rgba(0,0,0,.65))}
+  .fern-wallpaper:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.18),transparent 38%,rgba(0,0,0,.42)),radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.48) 100%)}
+  .forest-content{width:min(1160px,100%);display:flex;flex-direction:column;align-items:center;gap:clamp(42px,7vh,76px);transform:translateY(-1vh)}
+  .player-card{width:100%;min-height:450px;border-radius:58px;padding:34px clamp(30px,4vw,58px) 36px;display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(120deg,rgba(12,23,17,.64),rgba(25,66,34,.40) 48%,rgba(14,39,22,.48));backdrop-filter:blur(32px) saturate(185%);-webkit-backdrop-filter:blur(32px) saturate(185%);border-color:rgba(255,255,255,.31);box-shadow:0 34px 90px rgba(0,0,0,.36),inset 0 1px 1px rgba(255,255,255,.48),inset 0 -1px 1px rgba(255,255,255,.16)}
+  .player-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:start}
+  .track-meta{text-align:center;grid-column:2}
+  .track-title{font-weight:750;font-size:clamp(26px,3.5vw,42px);letter-spacing:-.035em;line-height:1.15;text-shadow:0 2px 14px rgba(0,0,0,.18)}
+  .track-artist{font-size:clamp(22px,3vw,36px);font-weight:350;color:rgba(255,255,255,.75);margin-top:8px;letter-spacing:-.025em}
+  .sound-wave{grid-column:3;justify-self:end;width:54px;height:56px;display:flex;align-items:center;justify-content:center;gap:4px;padding-top:3px}
+  .sound-wave i{width:4px;border-radius:9px;background:#fff;display:block;box-shadow:0 0 12px rgba(255,255,255,.25);animation:wave 1s ease-in-out infinite alternate}
+  .sound-wave i:nth-child(1),.sound-wave i:nth-child(5){height:18px;animation-delay:.2s}.sound-wave i:nth-child(2),.sound-wave i:nth-child(4){height:36px;animation-delay:.45s}.sound-wave i:nth-child(3){height:53px}
+  @keyframes wave{to{transform:scaleY(.45);opacity:.72}}
+  .sound-wave.paused i{animation-play-state:paused;transform:scaleY(.45)}
+  .timeline{display:grid;grid-template-columns:76px 1fr 76px;align-items:center;gap:18px;margin-top:25px}
+  .time{font-size:clamp(19px,2.5vw,28px);font-variant-numeric:tabular-nums;color:#fff;white-space:nowrap}
+  .time:last-child{text-align:right}
+  input[type=range]{appearance:none;-webkit-appearance:none;width:100%;height:13px;border-radius:99px;background:rgba(255,255,255,.32);outline:none;cursor:pointer;overflow:hidden}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:13px;height:13px;border-radius:50%;background:#fff;box-shadow:-600px 0 0 594px rgba(255,255,255,.96),0 0 0 2px rgba(255,255,255,.25)}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border:0;border-radius:50%;background:#fff;box-shadow:-600px 0 0 594px rgba(255,255,255,.96)}
+  .player-controls{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;align-items:center;margin-top:36px}
+  .icon-button{display:grid;place-items:center;background:transparent;transition:transform .22s var(--ease),opacity .22s ease;opacity:.98}
+  .icon-button:hover{transform:scale(1.1)}.icon-button:active{transform:scale(.92)}
+  .icon-button svg{width:clamp(38px,5vw,62px);height:clamp(38px,5vw,62px);fill:currentColor}
+  .icon-button.star svg,.icon-button.earbuds svg{width:clamp(42px,5.4vw,68px);height:clamp(42px,5.4vw,68px)}
+  .icon-button.main-play svg{width:clamp(70px,8vw,108px);height:clamp(70px,8vw,108px)}
+  .utility-row{width:min(1010px,84%);display:flex;justify-content:space-between;align-items:center}
+  .utility-button{width:clamp(100px,11vw,150px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,rgba(255,255,255,.21),rgba(255,255,255,.07));box-shadow:0 15px 45px rgba(0,0,0,.24),inset 0 1px 1px rgba(255,255,255,.55),inset 0 -1px 0 rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(24px) saturate(175%);-webkit-backdrop-filter:blur(24px) saturate(175%);transition:transform .25s var(--ease),background .25s}
+  .utility-button:hover{transform:translateY(-5px);background:rgba(255,255,255,.25)}.utility-button svg{width:44%;height:44%;fill:#fff}
+
+  /* Scene 2 — pale Apple Music-style interface */
+  .music-scene{color:#171717;background:linear-gradient(145deg,#fafafa,#e9e9e9 60%,#f9f9f9);min-height:100svh}
+  .music-scene .section-tag{color:rgba(20,20,20,.42)}
+  .music-shell{width:min(1500px,100%);min-height:690px;position:relative;display:flex;flex-direction:column;justify-content:space-between;padding:20px 0 2px}
+  .music-backdrop{position:absolute;inset:0;overflow:hidden;pointer-events:none;opacity:.92}
+  .music-backdrop .cover-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:30px;transform:translateY(-38px)}
+  .cover{height:190px;border-radius:22px;overflow:hidden;position:relative;box-shadow:0 8px 25px rgba(0,0,0,.10)}
+  .cover:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(0,0,0,.12))}
+  .cover.sand{background:radial-gradient(ellipse at 45% 20%,#f6d9ac 0 26%,transparent 27%),linear-gradient(135deg,#46382d,#b58c63 50%,#e5c59d)}
+  .cover.ocean{background:linear-gradient(150deg,#03509a,#0a80bd 52%,#072d55)}
+  .cover.ocean:after{content:"TODAY'S ACOUSTIC";position:absolute;left:8%;top:30%;font-family:cursive;font-size:clamp(22px,3vw,46px);font-style:italic;color:rgba(255,255,255,.8);transform:rotate(-5deg);white-space:nowrap}
+  .cover.coast{background:linear-gradient(120deg,#47716a,#d7c18c 50%,#176078)}
+  .backdrop-copy{display:flex;justify-content:space-between;gap:30px;margin-top:20px;color:#151515;filter:blur(5px);opacity:.42;font-size:clamp(22px,3vw,38px);font-weight:700}
+  .backdrop-lower{margin-top:390px;display:flex;justify-content:space-between;align-items:end;opacity:.48;filter:blur(2px)}
+  .backdrop-lower .fake-album{width:190px;height:150px;border-radius:18px;background:linear-gradient(135deg,#394b40,#c0ad91,#1e323e)}
+  .music-ui{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:space-between;min-height:670px}
+  .mini-player{min-height:210px;width:100%;border-radius:100px;padding:28px 48px;display:grid;grid-template-columns:142px minmax(210px,1fr) auto;align-items:center;gap:36px;background:linear-gradient(115deg,rgba(255,255,255,.73),rgba(255,255,255,.47));border:1px solid rgba(255,255,255,.82);box-shadow:0 22px 70px rgba(0,0,0,.11),inset 0 1px 1px rgba(255,255,255,.95),inset 0 -1px 1px rgba(255,255,255,.45);backdrop-filter:blur(38px) saturate(160%);-webkit-backdrop-filter:blur(38px) saturate(160%);}
+  .album-art{width:142px;aspect-ratio:1;border-radius:17px;background:linear-gradient(150deg,rgba(4,21,29,.2),transparent),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'%3E%3Cdefs%3E%3ClinearGradient id='a' x2='1' y2='1'%3E%3Cstop stop-color='%231b3d4c'/%3E%3Cstop offset='.5' stop-color='%230b1720'/%3E%3Cstop offset='1' stop-color='%23535c5c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='240' height='240' fill='url(%23a)'/%3E%3Cpath d='M0 0h90L35 240H0z' fill='%230b1117' opacity='.7'/%3E%3Cpath d='M132 0h22v240h-22z' fill='%238c9b98' opacity='.18'/%3E%3Ccircle cx='145' cy='90' r='18' fill='%23c09a76'/%3E%3Cpath d='M125 105q18-20 39 0l18 94h-70z' fill='%23080b10'/%3E%3Cpath d='M88 180l58-10 17 70H82z' fill='%2312161a'/%3E%3C/svg%3E") center/cover;box-shadow:0 7px 20px rgba(0,0,0,.18)}
+  .mini-meta{min-width:0}.mini-title{font-size:clamp(25px,3vw,39px);font-weight:760;letter-spacing:-.035em;line-height:1.1;color:#101010}.mini-artist{font-size:clamp(22px,2.7vw,34px);color:#858585;font-weight:550;margin-top:14px}
+  .mini-controls{display:flex;align-items:center;gap:clamp(22px,4vw,54px);padding-right:10px}.mini-controls button{background:transparent;color:#050505;display:grid;place-items:center;transition:transform .2s var(--ease)}.mini-controls button:hover{transform:scale(1.12)}.mini-controls svg{width:clamp(48px,6vw,76px);height:clamp(48px,6vw,76px);fill:currentColor}.mini-controls .mini-play svg{width:clamp(60px,7vw,90px);height:clamp(60px,7vw,90px)}
+  .bottom-controls{display:flex;align-items:center;justify-content:space-between;gap:34px;margin-top:40px}
+  .tab-bar{display:flex;align-items:center;justify-content:space-around;gap:clamp(26px,5vw,76px);padding:24px 42px;border-radius:100px;flex:1;max-width:1100px;min-height:172px;background:linear-gradient(120deg,rgba(255,255,255,.61),rgba(255,255,255,.32));border:1px solid rgba(255,255,255,.87);box-shadow:0 20px 65px rgba(0,0,0,.10),inset 0 1px 1px white;backdrop-filter:blur(35px) saturate(155%);-webkit-backdrop-filter:blur(35px) saturate(155%)}
+  .tab{min-width:116px;display:flex;align-items:center;flex-direction:column;gap:10px;background:transparent;color:#7b7b7b;padding:12px 20px;border-radius:50px;transition:all .22s var(--ease)}.tab svg{width:56px;height:56px;fill:currentColor}.tab span{font-size:clamp(18px,2.2vw,29px);font-weight:650;letter-spacing:-.03em}.tab.active{color:#fa334b;background:rgba(255,255,255,.32);box-shadow:inset 0 1px 2px rgba(255,255,255,.85),0 5px 18px rgba(0,0,0,.04)}.tab:hover{transform:translateY(-3px)}
+  .search-orb{width:172px;min-width:172px;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;color:#777;background:linear-gradient(135deg,rgba(255,255,255,.7),rgba(255,255,255,.35));border:1px solid rgba(255,255,255,.9);box-shadow:0 18px 55px rgba(0,0,0,.10),inset 0 1px 1px white;backdrop-filter:blur(34px) saturate(160%);-webkit-backdrop-filter:blur(34px) saturate(160%);transition:transform .22s var(--ease)}.search-orb:hover{transform:scale(1.04)}.search-orb svg{width:68px;height:68px;fill:none;stroke:currentColor;stroke-width:3.5}
+  .search-panel{position:absolute;right:0;bottom:190px;width:min(420px,90vw);padding:16px;border-radius:28px;background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.9);box-shadow:0 20px 65px rgba(0,0,0,.15);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);display:none}.search-panel.open{display:block;animation:pop .25s var(--ease)}.search-panel input{width:100%;border:0;outline:0;border-radius:16px;background:rgba(0,0,0,.06);padding:16px 18px;color:#222;font-size:17px}
+  @keyframes pop{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+  .toast{position:fixed;z-index:20;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;pointer-events:none;border-radius:99px;padding:12px 20px;background:rgba(20,25,22,.82);color:#fff;font-size:14px;backdrop-filter:blur(16px);transition:all .25s}.toast.show{opacity:1;transform:translate(-50%,0)}
+  .fallback-note{display:none}
+  @media(max-width:760px){
+    .demo-section{padding:68px 18px 42px;min-height:100svh}.section-tag{top:20px;left:20px}.forest-content{gap:38px;transform:none}.player-card{min-height:390px;border-radius:34px;padding:28px 22px}.track-title{font-size:27px}.track-artist{font-size:22px}.sound-wave{width:34px;transform:scale(.8);transform-origin:top right}.timeline{grid-template-columns:48px 1fr 52px;gap:9px;margin-top:24px}.time{font-size:16px}.player-controls{margin-top:26px}.icon-button svg{width:34px;height:34px}.icon-button.main-play svg{width:62px;height:62px}.icon-button.star svg,.icon-button.earbuds svg{width:36px;height:36px}.utility-row{width:78%}.utility-button{width:82px}.music-shell{min-height:630px}.music-ui{min-height:610px}.mini-player{min-height:138px;border-radius:32px;padding:18px;grid-template-columns:76px minmax(0,1fr);gap:16px}.album-art{width:76px;border-radius:12px}.mini-title{font-size:22px}.mini-artist{font-size:18px;margin-top:7px}.mini-controls{grid-column:1/-1;justify-content:flex-end;gap:32px;padding:0 10px 0 0;margin-top:-4px}.mini-controls svg{width:43px;height:43px}.mini-controls .mini-play svg{width:49px;height:49px}.bottom-controls{gap:12px;margin-top:26px;align-items:stretch}.tab-bar{min-height:112px;padding:12px 8px;gap:0}.tab{min-width:0;flex:1;padding:10px 4px;gap:6px}.tab svg{width:30px;height:30px}.tab span{font-size:12px}.search-orb{width:104px;min-width:104px}.search-orb svg{width:42px;height:42px}.backdrop-copy{font-size:18px}.cover{height:115px;border-radius:14px}.music-backdrop .cover-row{gap:10px}.backdrop-lower{margin-top:300px}.search-panel{bottom:138px}
+  }
+  @media(max-width:390px){.player-card{padding:24px 16px}.player-controls{grid-template-columns:repeat(5,1fr)}.icon-button svg{width:29px;height:29px}.icon-button.main-play svg{width:54px;height:54px}.tab span{font-size:11px}.search-orb{width:88px;min-width:88px}}
+  @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.liquid-glass,.player-card,.utility-button,.mini-player,.tab-bar,.search-orb{background-color:rgba(40,50,43,.88)}}
+</style>
+</head>
+<body>
+<svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
+  <symbol id="waveform" viewBox="0 0 64 64"><path d="M7 25v14M17 13v38M27 5v54M37 17v30M47 10v44M57 25v14" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></symbol>
+  <symbol id="star" viewBox="0 0 64 64"><path d="m32 5 8.2 17 18.8 2.7-13.5 13.1 3.2 18.6L32 47.6 15.3 56.4l3.2-18.6L5 24.7 23.8 22z" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round"/></symbol>
+  <symbol id="back" viewBox="0 0 64 64"><path d="M5 32 34 10v44L5 32Zm25 0 29-22v44L30 32Z"/></symbol>
+  <symbol id="forward" viewBox="0 0 64 64"><path d="m59 32-29 22V10l29 22ZM34 32 5 54V10l29 22Z"/></symbol>
+  <symbol id="play" viewBox="0 0 64 64"><path d="M13 7.5c0-3.7 4.1-5.9 7.2-3.8l39 25.3a4.6 4.6 0 0 1 0 7.7l-39 25.3c-3.1 2.1-7.2-.2-7.2-3.8V7.5Z"/></symbol>
+  <symbol id="pause" viewBox="0 0 64 64"><rect x="7" y="4" width="19" height="56" rx="5"/><rect x="38" y="4" width="19" height="56" rx="5"/></symbol>
+  <symbol id="earbuds" viewBox="0 0 64 64"><g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"><path d="M17 30c-7-2-10-9-7-15S20 5 26 10s6 13 1 19l-5 6c-3 4-10 3-12-1-2-3 0-7 4-9l7-5M47 30c7-2 10-9 7-15S44 5 38 10s-6 13-1 19l5 6c3 4 10 3 12-1 2-3 0-7-4-9l-7-5"/><path d="M19 38v15M45 38v15"/></g></symbol>
+  <symbol id="flashlight" viewBox="0 0 64 64"><path d="M19 5h26v10H19zM16 18h32l-4 9v30a4 4 0 0 1-4 4H24a4 4 0 0 1-4-4V27l-4-9Z"/><rect x="27" y="32" width="10" height="17" rx="5" fill="#183322"/><circle cx="32" cy="39" r="2.5" fill="white"/></symbol>
+  <symbol id="camera" viewBox="0 0 64 64"><path d="M22 10h20l5 7h9a5 5 0 0 1 5 5v29a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V22a5 5 0 0 1 5-5h9l5-7Z"/><circle cx="32" cy="36" r="13" fill="#24372b"/><circle cx="32" cy="36" r="8" fill="white"/></symbol>
+  <symbol id="home" viewBox="0 0 64 64"><path d="M5 29 32 6l27 23-5 6-5-4v25H15V31l-5 4-5-6Zm17 21h20V35H22v15Z"/></symbol>
+  <symbol id="grid" viewBox="0 0 64 64"><rect x="5" y="5" width="24" height="24" rx="5"/><rect x="35" y="5" width="24" height="24" rx="5"/><rect x="5" y="35" width="24" height="24" rx="5"/><rect x="35" y="35" width="24" height="24" rx="5"/></symbol>
+  <symbol id="radio" viewBox="0 0 64 64"><circle cx="32" cy="32" r="5"/><path d="M20 20a17 17 0 0 0 0 24M44 20a17 17 0 0 1 0 24M12 12a28 28 0 0 0 0 40M52 12a28 28 0 0 1 0 40M4 5a38 38 0 0 0 0 54M60 5a38 38 0 0 1 0 54" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></symbol>
+  <symbol id="library" viewBox="0 0 64 64"><path d="M14 9h36v7H14zM11 20h42v7H11zM10 32a5 5 0 0 1 5-5h34a5 5 0 0 1 5 5v25a5 5 0 0 1-5 5H15a5 5 0 0 1-5-5V32Z"/><path d="m28 35 15 9-15 9V35Z" fill="#eee"/></symbol>
+  <symbol id="search" viewBox="0 0 64 64"><circle cx="27" cy="27" r="17"/><path d="m40 40 17 17" stroke="currentColor" stroke-width="8" stroke-linecap="round"/></symbol>
+</svg>
+
+<section class="demo-section forest-scene" aria-label="深色森林音乐播放器玻璃效果">
+  <div class="section-tag">01 / Dark botanical glass</div>
+  <div class="fern-wallpaper" aria-hidden="true">
+    <svg viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#12b83b"/><stop offset=".45" stop-color="#087d28"/><stop offset="1" stop-color="#013b17"/></linearGradient>
+        <linearGradient id="stem" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#064219"/><stop offset=".5" stop-color="#42a83e"/><stop offset="1" stop-color="#063719"/></linearGradient>
+        <g id="fern" fill="url(#leaf)" stroke="#07511e" stroke-width="1.2">
+          <path d="M0 300Q105 160 310 0" fill="none" stroke="url(#stem)" stroke-width="6"/>
+          <g>
+            <path d="M38 266Q-4 226-52 239Q-31 275 38 266Z"/><path d="M57 247Q21 193-24 195Q-3 237 57 247Z"/>
+            <path d="M79 222Q56 164 9 151Q19 203 79 222Z"/><path d="M102 195Q88 133 45 111Q46 164 102 195Z"/>
+            <path d="M128 167Q126 105 88 73Q77 126 128 167Z"/><path d="M153 139Q163 80 133 39Q111 91 153 139Z"/>
+            <path d="M179 111Q202 55 183 8Q149 56 179 111Z"/><path d="M206 83Q241 33 234 -16Q190 24 206 83Z"/>
+            <path d="M48 259Q76 207 122 203Q106 250 48 259Z"/><path d="M76 231Q113 178 161 181Q138 227 76 231Z"/>
+            <path d="M104 202Q150 151 194 160Q164 204 104 202Z"/><path d="M132 174Q184 129 224 145Q187 183 132 174Z"/>
+            <path d="M160 145Q217 108 251 130Q207 159 160 145Z"/><path d="M187 116Q248 87 276 115Q228 135 187 116Z"/>
+            <path d="M214 88Q274 68 298 99Q248 110 214 88Z"/>
+          </g>
+        </g>
+      </defs>
+      <g opacity=".94">
+        <use href="#fern" transform="translate(-30 -20) scale(1.35) rotate(-12 150 150)"/>
+        <use href="#fern" transform="translate(290 -80) scale(1.1) rotate(18 150 150)"/>
+        <use href="#fern" transform="translate(650 -60) scale(1.25) rotate(-5 150 150)"/>
+        <use href="#fern" transform="translate(1000 -30) scale(1.35) rotate(18 150 150)"/>
+        <use href="#fern" transform="translate(-120 450) scale(1.55) rotate(40 150 150)"/>
+        <use href="#fern" transform="translate(300 600) scale(1.25) rotate(-24 150 150)"/>
+        <use href="#fern" transform="translate(720 530) scale(1.5) rotate(26 150 150)"/>
+        <use href="#fern" transform="translate(1110 440) scale(1.45) rotate(-18 150 150)"/>
+      </g>
+    </svg>
+  </div>
+  <div class="forest-content">
+    <article class="player-card liquid-glass">
+      <div>
+        <div class="player-top">
+          <div></div>
+          <div class="track-meta"><div class="track-title" id="forest-title">Luminescent Dreams</div><div class="track-artist" id="forest-artist">FKA twigs</div></div>
+          <div class="sound-wave" id="wave"><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="timeline">
+          <span class="time" id="elapsed">1:49</span>
+          <input id="progress" type="range" min="0" max="225" value="109" aria-label="播放进度">
+          <span class="time" id="remaining">-1:56</span>
+        </div>
+      </div>
+      <div class="player-controls">
+        <button class="icon-button star" id="favorite" aria-label="收藏"><svg viewBox="0 0 64 64"><use href="#star"/></svg></button>
+        <button class="icon-button" id="previous" aria-label="上一首"><svg viewBox="0 0 64 64"><use href="#back"/></svg></button>
+        <button class="icon-button main-play" id="forest-play" aria-label="暂停"><svg viewBox="0 0 64 64"><use href="#pause"/></svg></button>
+        <button class="icon-button" id="next" aria-label="下一首"><svg viewBox="0 0 64 64"><use href="#forward"/></svg></button>
+        <button class="icon-button earbuds" id="audio-output" aria-label="音频输出"><svg viewBox="0 0 64 64"><use href="#earbuds"/></svg></button>
+      </div>
+    </article>
+    <div class="utility-row">
+      <button class="utility-button" data-toast="手电筒已开启" aria-label="手电筒"><svg viewBox="0 0 64 64"><use href="#flashlight"/></svg></button>
+      <button class="utility-button" data-toast="相机已准备就绪" aria-label="相机"><svg viewBox="0 0 64 64"><use href="#camera"/></svg></button>
+    </div>
+  </div>
+</section>
+
+<section class="demo-section music-scene" aria-label="浅色音乐应用玻璃悬浮控件">
+  <div class="section-tag">02 / Frosted light glass</div>
+  <div class="music-shell">
+    <div class="music-backdrop" aria-hidden="true">
+      <div class="cover-row"><div class="cover sand"></div><div class="cover ocean"></div><div class="cover coast"></div></div>
+      <div class="backdrop-copy"><span>Chill &amp; Focus</span><span>Today's Acoustic</span><span>Essentials</span></div>
+      <div class="backdrop-lower"><div class="fake-album"></div><div style="font-size:54px;font-weight:750">Made for your moments</div><div class="fake-album"></div></div>
+    </div>
+    <div class="music-ui">
+      <article class="mini-player">
+        <div class="album-art" aria-label="专辑封面"></div>
+        <div class="mini-meta"><div class="mini-title" id="mini-title">Reverie</div><div class="mini-artist" id="mini-artist">Nujabes</div></div>
+        <div class="mini-controls">
+          <button id="mini-play" class="mini-play" aria-label="播放"><svg viewBox="0 0 64 64"><use href="#play"/></svg></button>
+          <button id="mini-next" aria-label="快进"><svg viewBox="0 0 64 64"><use href="#forward"/></svg></button>
+        </div>
+      </article>
+      <div class="bottom-controls">
+        <nav class="tab-bar" aria-label="音乐导航">
+          <button class="tab active" data-tab="Home"><svg viewBox="0 0 64 64"><use href="#home"/></svg><span>Home</span></button>
+          <button class="tab" data-tab="New"><svg viewBox="0 0 64 64"><use href="#grid"/></svg><span>New</span></button>
+          <button class="tab" data-tab="Radio"><svg viewBox="0 0 64 64"><use href="#radio"/></svg><span>Radio</span></button>
+          <button class="tab" data-tab="Library"><svg viewBox="0 0 64 64"><use href="#library"/></svg><span>Library</span></button>
+        </nav>
+        <button class="search-orb" id="search-toggle" aria-label="搜索"><svg viewBox="0 0 64 64"><use href="#search"/></svg></button>
+      </div>
+      <div class="search-panel" id="search-panel"><input type="search" placeholder="搜索歌曲、艺人或专辑…" aria-label="搜索音乐"></div>
+    </div>
+  </div>
+</section>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(() => {
+  const $ = (selector) => document.querySelector(selector);
+  const toast = (message) => {
+    const node = $('#toast');
+    node.textContent = message;
+    node.classList.add('show');
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => node.classList.remove('show'), 1800);
+  };
+  const tracks = [
+    { title: 'Luminescent Dreams', artist: 'FKA twigs', duration: 225 },
+    { title: 'Cellophane', artist: 'FKA twigs', duration: 263 },
+    { title: 'Two Weeks', artist: 'FKA twigs', duration: 251 }
+  ];
+  let trackIndex = 0, playing = true, elapsed = 109;
+  const progress = $('#progress');
+  const fmt = (seconds) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+  function renderPlayer() {
+    const track = tracks[trackIndex];
+    $('#forest-title').textContent = track.title;
+    $('#forest-artist').textContent = track.artist;
+    $('#elapsed').textContent = fmt(elapsed);
+    $('#remaining').textContent = `-${fmt(Math.max(0, track.duration - elapsed))}`;
+    progress.max = track.duration;
+    progress.value = elapsed;
+    const icon = $('#forest-play use');
+    icon.setAttribute('href', playing ? '#pause' : '#play');
+    $('#forest-play').setAttribute('aria-label', playing ? '暂停' : '播放');
+    $('#wave').classList.toggle('paused', !playing);
+  }
+  function changeTrack(direction) { trackIndex = (trackIndex + direction + tracks.length) % tracks.length; elapsed = 0; renderPlayer(); }
+  $('#forest-play').addEventListener('click', () => { playing = !playing; renderPlayer(); });
+  $('#previous').addEventListener('click', () => changeTrack(-1));
+  $('#next').addEventListener('click', () => changeTrack(1));
+  progress.addEventListener('input', () => { elapsed = Number(progress.value); renderPlayer(); });
+  $('#favorite').addEventListener('click', (event) => {
+    const button = event.currentTarget;
+    button.style.color = button.dataset.saved === 'true' ? '#fff' : '#ff6b83';
+    button.dataset.saved = button.dataset.saved === 'true' ? 'false' : 'true';
+    toast(button.dataset.saved === 'true' ? '已添加到收藏' : '已取消收藏');
+  });
+  $('#audio-output').addEventListener('click', () => toast('音频输出设备'));
+  document.querySelectorAll('[data-toast]').forEach(button => button.addEventListener('click', () => toast(button.dataset.toast)));
+  setInterval(() => {
+    if (!playing) return;
+    elapsed = elapsed >= tracks[trackIndex].duration ? 0 : elapsed + 1;
+    renderPlayer();
+  }, 1000);
+
+  const miniTracks = [
+    { title: 'Reverie', artist: 'Nujabes' },
+    { title: 'Aruarian Dance', artist: 'Nujabes' },
+    { title: 'Feather', artist: 'Nujabes' }
+  ];
+  let miniIndex = 0, miniPlaying = false;
+  function renderMini() {
+    $('#mini-title').textContent = miniTracks[miniIndex].title;
+    $('#mini-artist').textContent = miniTracks[miniIndex].artist;
+    $('#mini-play use').setAttribute('href', miniPlaying ? '#pause' : '#play');
+    $('#mini-play').setAttribute('aria-label', miniPlaying ? '暂停' : '播放');
+  }
+  $('#mini-play').addEventListener('click', () => { miniPlaying = !miniPlaying; renderMini(); });
+  $('#mini-next').addEventListener('click', () => { miniIndex = (miniIndex + 1) % miniTracks.length; renderMini(); });
+  document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(item => item.classList.toggle('active', item === tab));
+    toast(`已切换到 ${tab.dataset.tab}`);
+  }));
+  $('#search-toggle').addEventListener('click', () => {
+    const panel = $('#search-panel');
+    panel.classList.toggle('open');
+    if (panel.classList.contains('open')) panel.querySelector('input').focus();
+  });
+  renderPlayer();
+  renderMini();
+})();
+</script>
+</body>
+</html>

@@ -99,18 +99,18 @@ export function AvatarModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md">
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xl">
+      <div className="w-full max-w-md liquid-glass rounded-3xl shadow-2xl overflow-hidden transition-all duration-300">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-black/5 dark:border-white/10">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-2xl liquid-glass-subflex items-center justify-center text-emerald-600 dark:text-emerald-400">
               <User className="w-4 h-4" />
             </div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">个人头像与资料设置</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ios-press"
+            className="liquid-orb w-8 h-8 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -119,7 +119,7 @@ export function AvatarModal({
         <form onSubmit={handleSave} className="p-6 space-y-5">
           {/* 头像预览与上传区 */}
           <div className="flex items-center gap-5">
-            <div className="relative group w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 ring-2 ring-emerald-500/40 shrink-0 shadow-md">
+            <div className="relative group w-20 h-20 rounded-2xl overflow-hidden bg-emerald-950/20 ring-2 ring-emerald-500/50 shrink-0 shadow-lg shadow-emerald-500/10">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={previewUrl || session?.avatarUrl || '/src/assets/images/avatar_alex_morgan_1793673663751.jpg'}
@@ -129,10 +129,10 @@ export function AvatarModal({
               />
             </div>
 
-            <div className="flex-1 space-y-1.5">
+            <div className="flex-1 space-y-2">
               <label
                 htmlFor="avatar-upload"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl cursor-pointer transition-colors"
+                className="liquid-pill inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 cursor-pointer"
               >
                 <Upload className="w-3.5 h-3.5" />
                 <span>选择新头像图片</span>
@@ -144,90 +144,90 @@ export function AvatarModal({
                 onChange={handleFileChange}
                 className="hidden"
               />
-              <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                文件直传至 Upstash Blob，享受全球边缘 CDN 加速。
-              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                上传后将持久化写入 Upstash Blob，并在 Redis 会话中实时更新。
+              </p>
             </div>
           </div>
 
-          {/* 表单输入 */}
           <div className="space-y-3.5 text-xs">
-            <div>
-              <label className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                <User className="w-3.5 h-3.5 text-slate-400" />
-                <span>用户显示名称</span>
+            <div className="space-y-1">
+              <label className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300">
+                <User className="w-3.5 h-3.5 text-emerald-500" />
+                <span>姓名 / 昵称</span>
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                className="w-full px-3.5 py-2 rounded-xl liquid-input text-slate-900 dark:text-white"
               />
             </div>
 
-            <div>
-              <label className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                <Mail className="w-3.5 h-3.5 text-slate-400" />
-                <span>联系邮箱</span>
+            <div className="space-y-1">
+              <label className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300">
+                <Mail className="w-3.5 h-3.5 text-emerald-500" />
+                <span>电子邮箱</span>
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                className="w-full px-3.5 py-2 rounded-xl liquid-input text-slate-900 dark:text-white"
               />
             </div>
 
-            <div>
-              <label className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                <Briefcase className="w-3.5 h-3.5 text-slate-400" />
-                <span>职位 / 头衔</span>
+            <div className="space-y-1">
+              <label className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300">
+                <Briefcase className="w-3.5 h-3.5 text-emerald-500" />
+                <span>角色与身份</span>
               </label>
               <input
                 type="text"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                required
+                className="w-full px-3.5 py-2 rounded-xl liquid-input text-slate-900 dark:text-white"
               />
             </div>
           </div>
 
           {errorMessage && (
-            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium">
+            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold">
               {errorMessage}
             </div>
           )}
 
           {successMessage && (
-            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2 font-bold">
               <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span>{successMessage}</span>
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-black/5 dark:border-white/10">
             <button
               type="button"
               onClick={onClose}
               disabled={isUploading}
-              className="px-4 py-2 text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="liquid-pill px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
             >
               取消
             </button>
             <button
               type="submit"
               disabled={isUploading}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] rounded-xl shadow-md shadow-emerald-500/20 transition-all disabled:opacity-50"
+              className="liquid-pill-primary px-5 py-2 text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer disabled:opacity-40"
             >
               {isUploading ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>正在存入 Blob...</span>
+                  <span>保存同步中...</span>
                 </>
               ) : (
-                <span>保存至 Blob 与 Redis</span>
+                <span>保存并同步至 Redis</span>
               )}
             </button>
           </div>

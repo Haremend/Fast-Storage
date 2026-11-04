@@ -106,18 +106,18 @@ export function UploadModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md">
-      <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xl">
+      <div className="w-full max-w-lg liquid-glass rounded-3xl shadow-2xl overflow-hidden transition-all duration-300">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-black/5 dark:border-white/10">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-2xl liquid-glass-subtle flex items-center justify-center text-emerald-600 dark:text-emerald-400">
               <FileText className="w-4 h-4" />
             </div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">上传文档至云端存储</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ios-press"
+            className="liquid-orb w-8 h-8 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -128,10 +128,10 @@ export function UploadModal({
           <button
             type="button"
             onClick={() => setIsTextMode(false)}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all ${
+            className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all cursor-pointer ${
               !isTextMode
-                ? 'bg-emerald-500 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'liquid-pill-primary shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             本地文件上传 (PDF, MD, TXT)
@@ -139,14 +139,14 @@ export function UploadModal({
           <button
             type="button"
             onClick={() => setIsTextMode(true)}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5 ${
+            className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all flex items-center gap-1.5 cursor-pointer ${
               isTextMode
-                ? 'bg-emerald-500 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'liquid-pill-primary shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>在线 Markdown / 笔记编辑</span>
+            <span>在线 Markdown 编辑</span>
           </button>
         </div>
 
@@ -160,10 +160,10 @@ export function UploadModal({
               }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={handleDrop}
-              className={`p-6 rounded-2xl border-2 border-dashed text-center transition-all ${
+              className={`p-6 rounded-2xl border-2 border-dashed text-center transition-all liquid-glass-subtle ${
                 isDragging
-                  ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20'
-                  : 'border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 bg-slate-50/60 dark:bg-slate-950/60'
+                  ? 'border-emerald-500 bg-emerald-500/15'
+                  : 'border-slate-300 dark:border-white/15 hover:border-emerald-500/50'
               }`}
             >
               <input
@@ -175,16 +175,16 @@ export function UploadModal({
                 className="hidden"
               />
               <label htmlFor="doc-file-input" className="cursor-pointer block">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-2">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-2 shadow-xs">
                   <Upload className="w-6 h-6 stroke-[2.2]" />
                 </div>
                 {file ? (
-                  <div className="text-xs text-slate-900 dark:text-white font-semibold truncate max-w-xs mx-auto">
+                  <div className="text-xs text-slate-900 dark:text-white font-bold truncate max-w-xs mx-auto">
                     {file.name} ({(file.size / 1024).toFixed(1)} KB)
                   </div>
                 ) : (
                   <>
-                    <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
                       点击选择本地文件 或 将文件拖拽至此处
                     </div>
                     <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
@@ -205,7 +205,7 @@ export function UploadModal({
                   type="text"
                   value={textDocName}
                   onChange={(e) => setTextDocName(e.target.value)}
-                  className="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3.5 py-2 text-xs rounded-xl liquid-input font-mono"
                 />
               </div>
               <div>
@@ -216,7 +216,7 @@ export function UploadModal({
                   rows={4}
                   value={textContent}
                   onChange={(e) => setTextContent(e.target.value)}
-                  className="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-mono focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3.5 py-2 text-xs rounded-xl liquid-input font-mono leading-relaxed"
                 />
               </div>
             </div>
@@ -226,7 +226,7 @@ export function UploadModal({
           <div className="space-y-3 text-xs">
             <div>
               <label className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                <Tag className="w-3.5 h-3.5 text-slate-400" />
+                <Tag className="w-3.5 h-3.5 text-emerald-500" />
                 <span>语义检索标签 (逗号分隔)</span>
               </label>
               <input
@@ -234,13 +234,13 @@ export function UploadModal({
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
                 placeholder="例如: 架构设计, Vercel, 机器学习"
-                className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                className="w-full px-3.5 py-2 rounded-xl liquid-input"
               />
             </div>
 
             <div>
               <label className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                <AlignLeft className="w-3.5 h-3.5 text-slate-400" />
+                <AlignLeft className="w-3.5 h-3.5 text-emerald-500" />
                 <span>内容简要备注 (可选)</span>
               </label>
               <input
@@ -248,20 +248,20 @@ export function UploadModal({
                 value={summary}
                 onChange={(e) => setSummary(e.target.value)}
                 placeholder="简短描述，有助于快速预览与向量上下文提取"
-                className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                className="w-full px-3.5 py-2 rounded-xl liquid-input"
               />
             </div>
           </div>
 
           {errorMessage && (
-            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-medium">
+            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold">
               {errorMessage}
             </div>
           )}
 
           {successInfo && (
-            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs space-y-1">
-              <div className="flex items-center gap-2 font-semibold">
+            <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs space-y-1">
+              <div className="flex items-center gap-2 font-bold">
                 <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span>{successInfo.message}</span>
               </div>
@@ -271,19 +271,19 @@ export function UploadModal({
             </div>
           )}
 
-          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-black/5 dark:border-white/10">
             <button
               type="button"
               onClick={onClose}
               disabled={isUploading}
-              className="px-4 py-2 text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="liquid-pill px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
             >
               取消
             </button>
             <button
               type="submit"
               disabled={isUploading || (!isTextMode && !file)}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] rounded-xl shadow-md shadow-emerald-500/20 transition-all disabled:opacity-50"
+              className="liquid-pill-primary px-5 py-2 text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer disabled:opacity-40"
             >
               {isUploading ? (
                 <>
