@@ -87,7 +87,7 @@
 }
 
 .dark .liquid-glass-subtle {
-  background: rgba(20, 10, 32, 0.55);
+  background: rgba(20, 10, 32, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 8px 25px -4px rgba(0, 0, 0, 0.45),
               inset 0 1px 0 0 rgba(255, 255, 255, 0.28);
