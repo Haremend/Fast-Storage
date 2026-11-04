@@ -8,6 +8,10 @@ export interface VectorMetadata {
   type: string;
   snippet: string;
   tags: string[];
+  blobUrl?: string;
+  size?: number;
+  summary?: string;
+  uploadedAt?: string;
   [key: string]: unknown;
 }
 
@@ -129,6 +133,10 @@ export const VectorService = {
       type: doc.type,
       snippet,
       tags: doc.tags,
+      blobUrl: doc.blobUrl,
+      size: doc.size,
+      summary: doc.summary,
+      uploadedAt: doc.uploadedAt,
     };
 
     // Live Upstash Vector with built-in embeddings

@@ -1,36 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DocumentService } from '@/lib/services/documents';
 import { BlobService } from '@/lib/services/blob';
 
 export async function GET(req: NextRequest) {
   try {
-    const id = req.nextUrl.searchParams.get('id');
-    if (!id) {
-      return new NextResponse('缺少文档 ID', { status: 400 });
+    const key = req.nextUrl.searchParams.get('key') || req.nextUrl.searchParams.get('id');
+    if (!key) {
+      return new NextResponse('缺少文件 Key', { status: 400 });
     }
 
-    const doc = await DocumentService.getById(id);
-    if (!doc) {
-      return new NextResponse('文档不存在', { status: 404 });
+    const head = await BlobService.head(key);
+    if (!head) {
+      return new NextResponse('文件不存在', { status: 404 });
     }
 
-    let fileBuffer: Buffer | Uint8Array;
-
-    // Check if stored in simulated bucket
-    const localBlob = await BlobService.get(doc.blobUrl.replace('/api/blob/raw?key=', ''));
-    if (localBlob) {
-      fileBuffer = new Uint8Array(localBlob.data);
-    } else if (doc.fullText) {
-      fileBuffer = new TextEncoder().encode(doc.fullText);
-    } else {
-      fileBuffer = new TextEncoder().encode(`Fast Storage Document: ${doc.name}\n\n${doc.summary}`);
+    const bytes = await BlobService.getBytes(key);
+    if (!bytes) {
+      return new NextResponse('文件读取失败', { status: 500 });
     }
 
-    // Set proper headers to trigger browser attachment download
-    return new Response(fileBuffer as unknown as BodyInit, {
+    const name = key.split('/').pop() || key;
+    return new Response(new Uint8Array(bytes.data), {
       headers: {
-        'Content-Type': doc.type || 'application/octet-stream',
-        'Content-Disposition': `attachment; filename="${encodeURIComponent(doc.name)}"; filename*=UTF-8''${encodeURIComponent(doc.name)}`,
+        'Content-Type': bytes.contentType || 'application/octet-stream',
+        'Content-Length': String(bytes.data.length),
+        'Content-Disposition': `attachment; filename="${name.replace(/[^\w.\-]/g, '_')}"; filename*=UTF-8''${encodeURIComponent(name)}`,
         'Cache-Control': 'no-cache',
       },
     });

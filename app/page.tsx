@@ -277,10 +277,20 @@ export default function HomePage() {
     }
   };
 
-  const handleDocumentUploaded = (newDoc: DocumentItem) => {
-    setDocuments((prev) => [newDoc, ...prev]);
-    fetchTasks();
+  const handleDocumentUploaded = () => {
+    // 文件列表由 DocumentsView 自管；上传后刷新概览与预览
+    fetchDocuments();
     fetchStatus();
+  };
+
+  const handleSelectDocument = async (key: string) => {
+    try {
+      const res = await fetch(`/api/documents?id=${encodeURIComponent(key)}`);
+      const data = await res.json();
+      if (data.success && data.document) setSelectedDoc(data.document);
+    } catch (err) {
+      console.error('Load document preview failed:', err);
+    }
   };
 
   const handleTriggerSemanticSearch = (query: string) => {
@@ -410,13 +420,9 @@ export default function HomePage() {
 
           {currentTab === 'documents' && (
             <DocumentsView
-              documents={documents}
-              onSelectDocument={setSelectedDoc}
-              onDeleteDocument={handleDeleteDocument}
+              onSelectDocument={(doc) => handleSelectDocument(doc.id)}
               onOpenUpload={() => setIsUploadOpen(true)}
               onTriggerSemanticSearch={handleTriggerSemanticSearch}
-              onRefresh={fetchDocuments}
-              isLoading={isLoadingDocs}
             />
           )}
 

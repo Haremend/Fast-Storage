@@ -20,21 +20,13 @@ export function UploadModal({
   const [summary, setSummary] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [successInfo, setSuccessInfo] = useState<{ message: string; taskId: string } | null>(null);
+  const [successInfo, setSuccessInfo] = useState<{ message: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // 快速文本编辑模式
   const [isTextMode, setIsTextMode] = useState(false);
-  const [textDocName, setTextDocName] = useState('Serverless边缘计算笔记.md');
-  const [textContent, setTextContent] = useState(
-    `# Upstash Redis 与 Serverless 全局缓存最佳实践
-
-在 Vercel 等 Serverless 环境中处理高并发：
-1. 采用 QStash 异步队列缓冲长期耗时的向量嵌入任务。
-2. 将非结构化文本通过 Upstash Vector 建立稠密高维向量。
-3. 查询结果在 Upstash Redis 中以 5 分钟 TTL 缓存，实现亚毫秒极速响应。
-4. 每当有新文档入库时，主动通知 Redis 清理或失效过时键值。`
-  );
+  const [textDocName, setTextDocName] = useState('');
+  const [textContent, setTextContent] = useState('');
 
   if (!isOpen) return null;
 
@@ -91,8 +83,9 @@ export function UploadModal({
 
       onDocumentUploaded(data.document);
       setSuccessInfo({
-        message: '文档已安全存入 Upstash Blob！QStash 异步向量索引任务已排入队列。',
-        taskId: data.taskId,
+        message: data.textLike
+          ? '文档已存入 Upstash Blob，并已同步建立语义向量索引！'
+          : '文档已存入 Upstash Blob！',
       });
 
       setTimeout(() => {
@@ -264,9 +257,6 @@ export function UploadModal({
               <div className="flex items-center gap-2 font-bold">
                 <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span>{successInfo.message}</span>
-              </div>
-              <div className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 pl-6">
-                QStash 异步任务流水号: {successInfo.taskId}
               </div>
             </div>
           )}

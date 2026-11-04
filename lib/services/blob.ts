@@ -15,6 +15,28 @@ export interface BlobResult {
   source: 'upstash-blob' | 'simulated-blob';
 }
 
+export interface BlobListItem {
+  key: string;
+  url: string;
+  size: number;
+  uploadedAt: string;
+  contentType?: string;
+}
+
+export interface BlobHeadInfo {
+  key: string;
+  url: string;
+  size: number;
+  uploadedAt: string;
+  contentType: string;
+}
+
+export interface BlobListPage {
+  items: BlobListItem[];
+  cursor: string | null;
+  hasMore: boolean;
+}
+
 interface StoredBlob {
   key: string;
   data: Buffer;
@@ -34,6 +56,11 @@ if (process.env.NODE_ENV !== 'production') {
   globalForBlob.simulatedBlobBucket = simulatedBucket;
 }
 
+async function getBucket() {
+  const { Bucket } = await import('@upstash/blob');
+  return new Bucket({ token: envConfig.upstashBlobToken });
+}
+
 export const BlobService = {
   isLive(): boolean {
     return envConfig.hasUpstashBlob;
@@ -49,8 +76,7 @@ export const BlobService = {
     }
     const start = Date.now();
     try {
-      const { Bucket } = await import('@upstash/blob');
-      const bucket = new Bucket({ token: envConfig.upstashBlobToken });
+      const bucket = await getBucket();
       await bucket.list({ limit: 1 });
       return {
         connected: true,
@@ -76,11 +102,8 @@ export const BlobService = {
     // Live Upstash Blob
     if (envConfig.hasUpstashBlob) {
       try {
-        const { Bucket } = await import('@upstash/blob');
-        const bucket = new Bucket({ token: envConfig.upstashBlobToken });
-        const res = await bucket.put(key, buffer, {
-          contentType,
-        });
+        const bucket = await getBucket();
+        const res = await bucket.put(key, buffer, { contentType });
 
         return {
           url: res.url || `https://blob.upstash.com/${key}`,
@@ -120,6 +143,113 @@ export const BlobService = {
     };
   },
 
+  /**
+   * List blobs with cursor-based pagination.
+   * Live mode delegates to Upstash Blob `list({ prefix, limit, cursor })`,
+   * whose cursor is opaque and undefined on the last page.
+   */
+  async listAll(options: { cursor?: string; limit?: number; prefix?: string } = {}): Promise<BlobListPage> {
+    const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
+
+    if (envConfig.hasUpstashBlob) {
+      try {
+        const bucket = await getBucket();
+        const page = await bucket.list({
+          prefix: options.prefix,
+          limit,
+          cursor: options.cursor,
+        });
+        const items: BlobListItem[] = page.blobs.map((blob) => ({
+          key: blob.path,
+          url: blob.url || '',
+          size: blob.size,
+          uploadedAt:
+            blob.uploadedAt instanceof Date
+              ? blob.uploadedAt.toISOString()
+              : new Date(blob.uploadedAt).toISOString(),
+        }));
+        const cursor = page.cursor ?? null;
+        return { items, cursor, hasMore: cursor !== null };
+      } catch (err) {
+        console.warn('[Upstash Blob] Live list failed, using local bucket:', err);
+      }
+    }
+
+    // Simulated bucket: offset-encoded cursor, newest first
+    const all = Array.from(simulatedBucket.values()).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    const offset = options.cursor ? Math.max(0, parseInt(options.cursor, 10) || 0) : 0;
+    const pageItems = all.slice(offset, offset + limit);
+    const nextOffset = offset + pageItems.length;
+    const hasMore = nextOffset < all.length;
+
+    return {
+      items: pageItems.map((item) => ({
+        key: item.key,
+        url: item.url,
+        size: item.size,
+        uploadedAt: item.createdAt,
+        contentType: item.contentType,
+      })),
+      cursor: hasMore ? String(nextOffset) : null,
+      hasMore,
+    };
+  },
+
+  async head(key: string): Promise<BlobHeadInfo | null> {
+    if (envConfig.hasUpstashBlob) {
+      try {
+        const bucket = await getBucket();
+        const info = await bucket.info(key);
+        if (!info) return null;
+        return {
+          key,
+          url: info.url || '',
+          size: info.size,
+          uploadedAt:
+            info.uploadedAt instanceof Date
+              ? info.uploadedAt.toISOString()
+              : new Date(info.uploadedAt).toISOString(),
+          contentType: info.contentType || 'application/octet-stream',
+        };
+      } catch (err) {
+        console.warn(`[Upstash Blob] info failed for ${key}:`, err);
+        return null;
+      }
+    }
+
+    const stored = simulatedBucket.get(key);
+    if (!stored) return null;
+    return {
+      key,
+      url: stored.url,
+      size: stored.size,
+      uploadedAt: stored.createdAt,
+      contentType: stored.contentType,
+    };
+  },
+
+  async getBytes(key: string): Promise<{ data: Buffer; contentType: string } | null> {
+    if (envConfig.hasUpstashBlob) {
+      try {
+        const bucket = await getBucket();
+        const download = await bucket.get(key);
+        const buffer = Buffer.from(await new Response(download.body).arrayBuffer());
+        return {
+          data: buffer,
+          contentType: download.contentType || 'application/octet-stream',
+        };
+      } catch (err) {
+        console.warn(`[Upstash Blob] get failed for ${key}:`, err);
+        return null;
+      }
+    }
+
+    const stored = simulatedBucket.get(key);
+    return stored ? { data: stored.data, contentType: stored.contentType } : null;
+  },
+
   async get(key: string): Promise<StoredBlob | null> {
     if (simulatedBucket.has(key)) {
       return simulatedBucket.get(key)!;
@@ -130,24 +260,14 @@ export const BlobService = {
   async delete(key: string): Promise<boolean> {
     if (envConfig.hasUpstashBlob) {
       try {
-        const { Bucket } = await import('@upstash/blob');
-        const bucket = new Bucket({ token: envConfig.upstashBlobToken });
+        const bucket = await getBucket();
         await bucket.del(key);
         return true;
       } catch (err) {
         console.warn(`[Upstash Blob] Delete error for key ${key}:`, err);
+        return false;
       }
     }
     return simulatedBucket.delete(key);
-  },
-
-  async list(prefix = ''): Promise<{ key: string; size: number; url: string }[]> {
-    const results: { key: string; size: number; url: string }[] = [];
-    simulatedBucket.forEach((val, k) => {
-      if (!prefix || k.startsWith(prefix)) {
-        results.push({ key: k, size: val.size, url: val.url });
-      }
-    });
-    return results;
   },
 };

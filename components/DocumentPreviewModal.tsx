@@ -107,7 +107,7 @@ export function DocumentPreviewModal({
             <div>
               <div className="text-[11px] text-slate-400 dark:text-slate-300 uppercase font-bold font-mono">状态</div>
               <div className="text-slate-900 dark:text-slate-200 mt-0.5 font-bold capitalize">
-                {document.status === 'indexed' ? '已向量索引' : '处理排队中'}
+                {document.status === 'indexed' ? '已向量索引' : document.status === 'unindexed' ? '未建立向量' : '处理排队中'}
               </div>
             </div>
             <div>

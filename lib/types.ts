@@ -23,7 +23,7 @@ export interface DocumentItem {
   blobUrl: string;
   storageSource: 'upstash-blob' | 'simulated-blob';
   uploadedAt: string;
-  status: 'indexed' | 'processing' | 'pending' | 'failed';
+  status: 'indexed' | 'processing' | 'pending' | 'failed' | 'unindexed';
   summary: string;
   tags: string[];
   vectorId?: string;

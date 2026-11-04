@@ -114,12 +114,7 @@ export const QueueService = {
 
     setTimeout(async () => {
       try {
-        // Execute task action based on type
-        if (task.taskType === 'extract_and_embed' && task.docId) {
-          const { DocumentService } = await import('./documents');
-          await DocumentService.markAsIndexed(task.docId);
-        }
-
+        // 向量索引已在上传时同步完成，队列任务仅做状态流转演示
         task.status = 'completed';
         task.completedAt = new Date().toISOString();
         task.durationMs = Date.now() - startTime;

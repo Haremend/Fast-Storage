@@ -45,3 +45,5 @@ Thumbs.db
 
 
 CLAUDE.md
+# Build artifacts
+*.tsbuildinfo
