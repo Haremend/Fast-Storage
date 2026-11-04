@@ -37,52 +37,66 @@ export function DocumentsView({
   const [docs, setDocs] = useState<DocumentItem[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
+  const [activeFolder, setActiveFolder] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [filterType, setFilterType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [indexingKey, setIndexingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const filterTabs = [
-    { id: 'all', label: '全部文件' },
-    { id: 'markdown', label: 'Markdown (.md)' },
-    { id: 'pdf', label: 'PDF 资料' },
-    { id: 'text', label: '纯文本 (.txt)' },
+  // 远程文件夹分类（Upstash Blob 中的目录前缀）
+  const folderTabs = [
+    { id: '', label: '全部文件' },
+    { id: 'wallpapers/', label: 'Wallpapers 壁纸' },
+    { id: 'documents/', label: 'Documents 文档' },
+    { id: 'avatars/', label: 'Avatars 头像' },
   ];
 
-  const fetchPage = useCallback(async (reset: boolean) => {
-    if (reset) {
-      setIsLoading(true);
-      setError(null);
-    } else {
-      setIsLoadingMore(true);
-    }
-    try {
-      const url = new URL('/api/documents', window.location.origin);
-      url.searchParams.set('limit', String(PAGE_SIZE));
-      const currentCursor = reset ? null : cursor;
-      if (currentCursor) url.searchParams.set('cursor', currentCursor);
+  // 从 key 解析出所属文件夹（用于“分类”列展示）
+  const folderOf = (key: string) => {
+    const seg = key.split('/').filter(Boolean)[0];
+    if (seg === 'documents' || seg === 'wallpapers' || seg === 'avatars' || seg === 'temp') return seg;
+    return '其他';
+  };
 
-      const res = await fetch(url.toString());
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || '加载文件列表失败');
+  const fetchPage = useCallback(
+    async (reset: boolean) => {
+      const folder = activeFolder;
+      if (reset) {
+        setIsLoading(true);
+        setError(null);
+      } else {
+        setIsLoadingMore(true);
       }
+      try {
+        const url = new URL('/api/documents', window.location.origin);
+        url.searchParams.set('limit', String(PAGE_SIZE));
+        if (folder) url.searchParams.set('prefix', folder);
+        const currentCursor = reset ? null : cursor;
+        if (currentCursor) url.searchParams.set('cursor', currentCursor);
 
-      const next: DocumentItem[] = Array.isArray(data.documents) ? data.documents : [];
-      setDocs((prev) => (reset ? next : [...prev, ...next]));
-      setCursor(data.cursor ?? null);
-      setHasMore(Boolean(data.hasMore));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
-    } finally {
-      if (reset) setIsLoading(false);
-      else setIsLoadingMore(false);
-    }
-  }, [cursor]);
+        const res = await fetch(url.toString());
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || '加载文件列表失败');
+        }
 
+        const next: DocumentItem[] = Array.isArray(data.documents) ? data.documents : [];
+        setDocs((prev) => (reset ? next : [...prev, ...next]));
+        setCursor(data.cursor ?? null);
+        setHasMore(Boolean(data.hasMore));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '加载失败');
+      } finally {
+        if (reset) setIsLoading(false);
+        else setIsLoadingMore(false);
+      }
+    },
+    [activeFolder, cursor]
+  );
+
+  // 初始加载 + 切换文件夹时重置
   useEffect(() => {
     let active = true;
     const ac = new AbortController();
@@ -92,6 +106,7 @@ export function DocumentsView({
       try {
         const url = new URL('/api/documents', window.location.origin);
         url.searchParams.set('limit', String(PAGE_SIZE));
+        if (activeFolder) url.searchParams.set('prefix', activeFolder);
         const res = await fetch(url.toString(), { signal: ac.signal });
         const data = await res.json();
         if (!active) return;
@@ -110,7 +125,12 @@ export function DocumentsView({
       active = false;
       ac.abort();
     };
-  }, []);
+  }, [activeFolder]);
+
+  const switchFolder = (folder: string) => {
+    if (folder === activeFolder) return;
+    setActiveFolder(folder);
+  };
 
   const handleDelete = async (doc: DocumentItem) => {
     if (!confirm(`确定从 Upstash Blob 永久删除 "${doc.name}" 吗？`)) return;
@@ -171,9 +191,6 @@ export function DocumentsView({
   };
 
   const filteredDocs = docs.filter((doc) => {
-    if (filterType === 'markdown' && !doc.name.toLowerCase().endsWith('.md')) return false;
-    if (filterType === 'pdf' && !doc.name.toLowerCase().endsWith('.pdf')) return false;
-    if (filterType === 'text' && !doc.name.toLowerCase().endsWith('.txt')) return false;
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase();
       if (!doc.name.toLowerCase().includes(q) && !doc.summary.toLowerCase().includes(q)) return false;
@@ -190,10 +207,10 @@ export function DocumentsView({
             <div className="w-8 h-8 rounded-2xl liquid-glass-subtle flex items-center justify-center">
               <FolderArchive className="w-4 h-4 text-emerald-500" />
             </div>
-            <span>个人云端文档</span>
+            <span>文件管理</span>
           </h2>
           <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
-            直接读取 Upstash Blob 存储桶中的全部文件，支持上传、删除、复制公开下载直链，文本文件可一键转为语义向量。
+            管理 Upstash Blob 存储桶中的全部文件，支持按文件夹分类浏览、上传、删除、复制公开下载直链，文本文件可一键转为语义向量。
           </p>
         </div>
 
@@ -211,20 +228,20 @@ export function DocumentsView({
             className="liquid-pill-primary flex items-center gap-1.5 px-4 py-2 text-xs font-bold shadow-md shadow-black/25 transition-all cursor-pointer whitespace-nowrap text-black"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>上传新文档</span>
+            <span>上传文件</span>
           </button>
         </div>
       </div>
 
-      {/* 筛选器与搜索 */}
+      {/* 文件夹分类筛选器与搜索 */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-2 rounded-2xl liquid-glass">
         <div className="flex items-center gap-1 overflow-x-auto p-1 rounded-full liquid-glass-subtle scrollbar-hide">
-          {filterTabs.map((tab) => (
+          {folderTabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setFilterType(tab.id)}
+              onClick={() => switchFolder(tab.id)}
               className={`px-4 py-1.5 text-xs font-bold rounded-full whitespace-nowrap transition-all cursor-pointer ${
-                filterType === tab.id
+                activeFolder === tab.id
                   ? 'liquid-pill-primary shadow-xs text-black'
                   : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
@@ -252,11 +269,11 @@ export function DocumentsView({
         </div>
       )}
 
-      {/* 文档列表 */}
+      {/* 文件列表 */}
       <div className="rounded-3xl liquid-glass overflow-hidden shadow-md">
         <div className="grid grid-cols-12 px-6 py-3.5 border-b border-black/5 dark:border-white/10 text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider font-mono">
           <div className="col-span-6 sm:col-span-5">文件名与摘要</div>
-          <div className="hidden sm:block sm:col-span-2">类型</div>
+          <div className="hidden sm:block sm:col-span-2">分类</div>
           <div className="col-span-3 sm:col-span-2 text-right sm:text-left">大小 / 日期</div>
           <div className="hidden sm:block sm:col-span-1">向量</div>
           <div className="col-span-3 sm:col-span-2 text-right">操作与直链</div>
@@ -326,10 +343,10 @@ export function DocumentsView({
                     </div>
                   </div>
 
-                  {/* 类型 */}
+                  {/* 分类（远程文件夹） */}
                   <div className="hidden sm:flex sm:col-span-2 items-center">
-                    <span className="liquid-glass-subtle px-2 py-0.5 rounded-md text-[10px] font-medium text-slate-700 dark:text-slate-200">
-                      {(doc.type || 'file').split('/').pop() || 'file'}
+                    <span className="liquid-glass-subtle px-2 py-0.5 rounded-md text-[10px] font-mono font-medium text-slate-700 dark:text-slate-200">
+                      {folderOf(doc.id)}
                     </span>
                   </div>
 

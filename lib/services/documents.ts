@@ -54,9 +54,11 @@ function isTextLike(doc: DocumentItem): boolean {
 export const DocumentService = {
   /**
    * List all files from Upstash Blob, enriched with cached metadata.
-   * Supports cursor-based pagination (`cursor` + `limit`).
+   * Supports cursor-based pagination (`cursor` + `limit`) and an optional
+   * `prefix` to scope the listing to a remote folder (e.g. "documents/",
+   * "wallpapers/", "avatars/"). When omitted, every folder is listed.
    */
-  async listAll(options: { cursor?: string; limit?: number } = {}): Promise<{
+  async listAll(options: { cursor?: string; limit?: number; prefix?: string } = {}): Promise<{
     documents: DocumentItem[];
     cursor: string | null;
     hasMore: boolean;
@@ -68,7 +70,7 @@ export const DocumentService = {
     const page = await BlobService.listAll({
       cursor: options.cursor,
       limit,
-      prefix: 'documents/',
+      prefix: options.prefix,
     });
 
     // Load cached metadata (single Redis round-trip) to enrich the page

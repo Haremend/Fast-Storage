@@ -176,9 +176,12 @@ export const BlobService = {
     }
 
     // Simulated bucket: offset-encoded cursor, newest first
-    const all = Array.from(simulatedBucket.values()).sort(
+    let all = Array.from(simulatedBucket.values()).sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
+    if (options.prefix) {
+      all = all.filter((item) => item.key.startsWith(options.prefix!));
+    }
     const offset = options.cursor ? Math.max(0, parseInt(options.cursor, 10) || 0) : 0;
     const pageItems = all.slice(offset, offset + limit);
     const nextOffset = offset + pageItems.length;

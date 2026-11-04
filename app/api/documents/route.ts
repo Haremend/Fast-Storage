@@ -15,11 +15,13 @@ export async function GET(req: NextRequest) {
 
     const cursor = req.nextUrl.searchParams.get('cursor') || undefined;
     const limitParam = req.nextUrl.searchParams.get('limit');
+    const prefix = req.nextUrl.searchParams.get('prefix') || undefined;
     const limit = limitParam ? parseInt(limitParam, 10) : 20;
 
     const { documents, cursor: nextCursor, hasMore, blobLive } = await DocumentService.listAll({
       cursor,
       limit: Number.isFinite(limit) ? limit : 20,
+      prefix: prefix || undefined,
     });
 
     return NextResponse.json({

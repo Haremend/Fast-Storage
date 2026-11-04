@@ -46,7 +46,7 @@ export function TopBar({
 }: TopBarProps) {
   const navItems: { id: string; label: string; icon: LucideIcon; count?: number }[] = [
     { id: 'overview', label: '工作台概览', icon: LayoutDashboard },
-    { id: 'documents', label: '个人文档', icon: FolderArchive, count: docsCount },
+    { id: 'documents', label: '文件管理', icon: FolderArchive, count: docsCount },
     { id: 'search', label: '语义检索舱', icon: Sparkles },
     { id: 'queue', label: 'QStash 队列舱', icon: Activity },
     { id: 'redis', label: 'Redis 空间与用例', icon: Server },
@@ -75,20 +75,24 @@ export function TopBar({
     }
   }, []);
 
-  const tick = useCallback(() => {
-    const el = navRef.current;
-    if (!el || speedRef.current === 0) {
-      rafRef.current = null;
-      return;
+  const startEdgeScroll = useCallback(() => {
+    if (rafRef.current !== null) return; // 已在运行
+    function step() {
+      const el = navRef.current;
+      if (!el || speedRef.current === 0) {
+        rafRef.current = null;
+        return;
+      }
+      const prev = el.scrollLeft;
+      el.scrollLeft = prev + speedRef.current;
+      // 到达边缘则停止，避免空转
+      if (el.scrollLeft === prev) {
+        rafRef.current = null;
+        return;
+      }
+      rafRef.current = requestAnimationFrame(step);
     }
-    const prev = el.scrollLeft;
-    el.scrollLeft = prev + speedRef.current;
-    // 到达边缘则停止，避免空转
-    if (el.scrollLeft !== prev) {
-      rafRef.current = requestAnimationFrame(tick);
-    } else {
-      rafRef.current = null;
-    }
+    rafRef.current = requestAnimationFrame(step);
   }, []);
 
   const handleNavMouseMove = useCallback(
@@ -109,14 +113,13 @@ export function TopBar({
       }
 
       speedRef.current = speed;
-      if (speed !== 0 && rafRef.current === null) {
-        rafRef.current = requestAnimationFrame(tick);
-      } else if (speed === 0 && rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
+      if (speed !== 0) {
+        startEdgeScroll();
+      } else {
+        stopEdgeScroll();
       }
     },
-    [tick]
+    [startEdgeScroll, stopEdgeScroll]
   );
 
   useEffect(() => {
