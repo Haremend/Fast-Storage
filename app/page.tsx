@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { TopBar } from '@/components/TopBar';
-import { Sidebar } from '@/components/Sidebar';
 import { OverviewView } from '@/components/OverviewView';
 import { DocumentsView } from '@/components/DocumentsView';
 import { SemanticSearchView } from '@/components/SemanticSearchView';
@@ -56,18 +55,6 @@ export default function HomePage() {
     };
   });
 
-  // Sidebar collapse / expand state
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        return localStorage.getItem('fast_storage_sidebar_collapsed') === 'true';
-      } catch {
-        return false;
-      }
-    }
-    return false;
-  });
-
   // Modals state
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
@@ -91,16 +78,6 @@ export default function HomePage() {
 
   const toggleTheme = () => {
     setIsDarkMode((prev) => !prev);
-  };
-
-  const handleToggleSidebar = () => {
-    setIsSidebarCollapsed((prev) => {
-      const next = !prev;
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('fast_storage_sidebar_collapsed', String(next));
-      }
-      return next;
-    });
   };
 
   const handleWallpaperChange = async (newConfig: WallpaperConfig) => {
@@ -349,6 +326,11 @@ export default function HomePage() {
             className="fixed inset-0 -z-20 bg-cover bg-center bg-no-repeat transition-all duration-700"
             style={{ backgroundImage: `url("${wallpaperConfig.customDataUrl}")` }}
           />
+          {/* 毛玻璃柔光层：恒定浅霜，压制背景局部对比，保证前景文字可读 */}
+          <div
+            className="fixed inset-0 pointer-events-none bg-black/20 backdrop-blur-2xl backdrop-saturate-150"
+            style={{ zIndex: -15 }}
+          />
           {/* 可调暗化遮罩 */}
           <div
             className="fixed inset-0 -z-10 bg-black pointer-events-none transition-opacity duration-300"
@@ -398,7 +380,7 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* iOS 27 Liquid Glass Floating Top Bar */}
+      {/* iOS 27 Liquid Glass Floating Top Bar (unified navigation) */}
       <TopBar
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
@@ -410,22 +392,13 @@ export default function HomePage() {
         onLogout={handleLogout}
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
+        docsCount={documents.length}
       />
 
       {/* Main Workspace Layout */}
-      <div className="flex-1 flex w-full max-w-[1600px] mx-auto px-3 sm:px-6 py-4 gap-4 sm:gap-6">
-        {/* Desktop Liquid Glass Sidebar */}
-        <Sidebar
-          currentTab={currentTab}
-          onSelectTab={setCurrentTab}
-          status={status}
-          docsCount={documents.length}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={handleToggleSidebar}
-        />
-
+      <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 py-4">
         {/* Liquid Glass Content Viewport */}
-        <main className="flex-1 overflow-y-auto transition-all duration-300 min-w-0 pb-12">
+        <main className="overflow-y-auto transition-all duration-300 min-w-0 pb-12">
           {currentTab === 'overview' && (
             <OverviewView
               session={session}

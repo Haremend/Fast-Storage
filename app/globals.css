@@ -410,3 +410,13 @@ input[type="range"].liquid-slider::-webkit-slider-thumb {
 .ios-press:active {
   transform: scale(0.96);
 }
+
+/* Hide horizontal scrollbar while keeping the element scrollable */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
