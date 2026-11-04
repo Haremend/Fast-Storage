@@ -13,8 +13,8 @@ import { LoginView } from '@/components/LoginView';
 import { UploadModal } from '@/components/UploadModal';
 import { AvatarModal } from '@/components/AvatarModal';
 import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
-import { WallpaperModal, WallpaperConfig, WALLPAPER_PRESETS } from '@/components/WallpaperModal';
-import { DocumentItem, UserSession, SystemStatus, QueueTaskItem } from '@/lib/types';
+import { WallpaperModal, WALLPAPER_PRESETS } from '@/components/WallpaperModal';
+import { DocumentItem, UserSession, SystemStatus, QueueTaskItem, WallpaperConfig } from '@/lib/types';
 
 export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -103,7 +103,7 @@ export default function HomePage() {
     });
   };
 
-  const handleWallpaperChange = (newConfig: WallpaperConfig) => {
+  const handleWallpaperChange = async (newConfig: WallpaperConfig) => {
     setWallpaperConfig(newConfig);
     if (typeof window !== 'undefined') {
       try {
@@ -112,7 +112,42 @@ export default function HomePage() {
         console.error('Failed to save wallpaper config:', err);
       }
     }
+
+    try {
+      await fetch('/api/wallpaper', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'set_active', config: newConfig }),
+      });
+    } catch (err) {
+      console.warn('Failed to sync active wallpaper to Upstash Redis:', err);
+    }
   };
+
+  // Sync wallpaper from Upstash Redis on mount
+  useEffect(() => {
+    let isCurrent = true;
+    const fetchCloudWallpaper = async () => {
+      try {
+        const res = await fetch('/api/wallpaper');
+        const data = await res.json();
+        if (isCurrent && data.success && data.activeConfig) {
+          setWallpaperConfig(data.activeConfig);
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem('fast_storage_wallpaper_config', JSON.stringify(data.activeConfig));
+            } catch {}
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load wallpaper from Upstash cloud:', err);
+      }
+    };
+    fetchCloudWallpaper();
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
 
   const fetchDocuments = useCallback(async () => {
     setIsLoadingDocs(true);
@@ -298,7 +333,7 @@ export default function HomePage() {
   // Render Login View if not authenticated
   if (!isAuthenticated) {
     return (
-      <LoginView onLoginSuccess={handleLoginSuccess} />
+      <LoginView onLoginSuccess={handleLoginSuccess} wallpaperConfig={wallpaperConfig} />
     );
   }
 
@@ -312,7 +347,7 @@ export default function HomePage() {
         <>
           <div
             className="fixed inset-0 -z-20 bg-cover bg-center bg-no-repeat transition-all duration-700"
-            style={{ backgroundImage: `url(${wallpaperConfig.customDataUrl})` }}
+            style={{ backgroundImage: `url("${wallpaperConfig.customDataUrl}")` }}
           />
           {/* 可调暗化遮罩 */}
           <div

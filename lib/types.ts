@@ -79,3 +79,21 @@ export interface SystemStatus {
     lastPurgedAt: string | null;
   };
 }
+
+export interface UploadedWallpaper {
+  id: string;
+  name: string;
+  url: string;
+  key: string;
+  size: number;
+  uploadedAt: string;
+  source: 'upstash-blob' | 'simulated-blob';
+}
+
+export interface WallpaperConfig {
+  type: 'preset' | 'custom';
+  presetId: string;
+  customDataUrl: string | null;
+  customKey?: string | null;
+  dimPercent: number;
+}

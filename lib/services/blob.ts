@@ -4,7 +4,7 @@ export interface UploadOptions {
   filename: string;
   data: Buffer | string;
   contentType: string;
-  folder?: 'avatars' | 'documents' | 'temp';
+  folder?: 'avatars' | 'documents' | 'wallpapers' | 'temp';
 }
 
 export interface BlobResult {
@@ -94,13 +94,11 @@ export const BlobService = {
       }
     }
 
-    // Simulated Blob with data URL / local API route
-    let url: string;
-    if (contentType.startsWith('image/')) {
+    // Simulated Blob with dedicated HTTP API route or base64 fallback
+    let url = `/api/blob/raw?key=${encodeURIComponent(key)}`;
+    if (contentType.startsWith('image/') && folder !== 'wallpapers') {
       const base64 = buffer.toString('base64');
       url = `data:${contentType};base64,${base64}`;
-    } else {
-      url = `/api/blob/raw?key=${encodeURIComponent(key)}`;
     }
 
     const storedItem: StoredBlob = {

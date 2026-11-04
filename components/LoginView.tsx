@@ -2,12 +2,14 @@
 
 import React, { useState } from 'react';
 import { Lock, User, KeyRound, RefreshCw } from 'lucide-react';
+import { WallpaperConfig } from '@/lib/types';
 
 interface LoginViewProps {
   onLoginSuccess: (user: { username: string; role: string }) => void;
+  wallpaperConfig?: WallpaperConfig;
 }
 
-export function LoginView({ onLoginSuccess }: LoginViewProps) {
+export function LoginView({ onLoginSuccess, wallpaperConfig }: LoginViewProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -48,15 +50,30 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
     }
   };
 
+  const hasCustomBg = wallpaperConfig?.type === 'custom' && Boolean(wallpaperConfig.customDataUrl);
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans bg-[#06000c] text-white selection:bg-purple-500/30">
-      {/* Background Multi-layered Cosmic Black-Purple Liquid Aura Mesh (默认黑紫色) */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,#2a0845_0%,#110122_45%,#06000c_85%)]" />
-        <div className="absolute top-1/4 -left-20 w-[600px] h-[600px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(168,85,247,0.30),transparent_65%)] blur-3xl animate-pulse" />
-        <div className="absolute top-1/3 right-0 w-[550px] h-[550px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(217,70,239,0.22),transparent_65%)] blur-3xl" />
-        <div className="absolute -bottom-20 left-1/3 w-[700px] h-[700px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(76,29,149,0.35),transparent_65%)] blur-3xl" />
-      </div>
+      {/* Dynamic Background Layer (Supports Custom Uploaded Wallpaper or Default Black-Purple) */}
+      {hasCustomBg ? (
+        <>
+          <div
+            className="fixed inset-0 -z-20 bg-cover bg-center bg-no-repeat transition-all duration-700"
+            style={{ backgroundImage: `url("${wallpaperConfig!.customDataUrl}")` }}
+          />
+          <div
+            className="fixed inset-0 -z-10 bg-black pointer-events-none transition-opacity duration-300"
+            style={{ opacity: (wallpaperConfig?.dimPercent || 0) / 100 }}
+          />
+        </>
+      ) : (
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,#2a0845_0%,#110122_45%,#06000c_85%)]" />
+          <div className="absolute top-1/4 -left-20 w-[600px] h-[600px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(168,85,247,0.30),transparent_65%)] blur-3xl animate-pulse" />
+          <div className="absolute top-1/3 right-0 w-[550px] h-[550px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(217,70,239,0.22),transparent_65%)] blur-3xl" />
+          <div className="absolute -bottom-20 left-1/3 w-[700px] h-[700px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(76,29,149,0.35),transparent_65%)] blur-3xl" />
+        </div>
+      )}
 
       {/* iOS 27 Liquid Glass Login Card */}
       <div className="w-full max-w-sm liquid-glass rounded-3xl p-8 sm:p-9 relative z-10 shadow-2xl transition-all duration-300 border border-white/25">

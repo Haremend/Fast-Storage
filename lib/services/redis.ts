@@ -1,6 +1,6 @@
 import { Redis } from '@upstash/redis';
 import { envConfig } from '../config';
-import { UserSession, RedisKeyItem } from '../types';
+import { UserSession, RedisKeyItem, UploadedWallpaper, WallpaperConfig } from '../types';
 
 interface CacheEntry<T> {
   value: T;
@@ -359,5 +359,33 @@ export const RedisService = {
 
   async removeAuthSession(token: string): Promise<void> {
     await this.del(`auth:session:${token}`);
+  },
+
+  // Wallpapers Management in Upstash Redis
+  async getWallpaperHistory(): Promise<UploadedWallpaper[]> {
+    const list = await this.get<UploadedWallpaper[]>('app:wallpapers:history');
+    return Array.isArray(list) ? list : [];
+  },
+
+  async saveWallpaperToHistory(wallpaper: UploadedWallpaper): Promise<void> {
+    const current = await this.getWallpaperHistory();
+    const filtered = current.filter((w) => w.key !== wallpaper.key && w.id !== wallpaper.id);
+    const updated = [wallpaper, ...filtered].slice(0, 30);
+    await this.set('app:wallpapers:history', updated);
+  },
+
+  async removeWallpaperFromHistory(idOrKey: string): Promise<boolean> {
+    const current = await this.getWallpaperHistory();
+    const updated = current.filter((w) => w.id !== idOrKey && w.key !== idOrKey);
+    await this.set('app:wallpapers:history', updated);
+    return true;
+  },
+
+  async getActiveWallpaperConfig(): Promise<WallpaperConfig | null> {
+    return this.get<WallpaperConfig>('app:wallpaper:active');
+  },
+
+  async setActiveWallpaperConfig(config: WallpaperConfig): Promise<void> {
+    await this.set('app:wallpaper:active', config);
   },
 };
