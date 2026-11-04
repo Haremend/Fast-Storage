@@ -36,6 +36,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
       }
 
       if (data.token && typeof window !== 'undefined') {
+        localStorage.setItem('fast_storage_session_token', data.token);
         localStorage.setItem('upcloud_session_token', data.token);
       }
 
@@ -63,7 +64,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
 
           <div>
             <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-              UpCloud Vault
+              Fast Storage
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               请登录以访问个人空间

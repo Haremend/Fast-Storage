@@ -7,7 +7,7 @@ const DEFAULT_SESSION_ID = 'user_alex_morgan_01';
 const DEFAULT_SESSION: UserSession = {
   id: DEFAULT_SESSION_ID,
   name: 'Alex Morgan',
-  email: 'alex.morgan@upcloud.dev',
+  email: 'alex.morgan@faststorage.dev',
   avatarUrl: '/src/assets/images/avatar_alex_morgan_1793673663751.jpg',
   role: 'Cloud Architect & Researcher',
   createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),

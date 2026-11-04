@@ -1,4 +1,4 @@
-# UpCloud Vault — 个人云端存储与文档语义智能检索系统
+# Fast Storage — 个人云端存储与文档语义智能检索系统
 
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.4-black?logo=next.js)](https://nextjs.org/)
 [![Upstash](https://img.shields.io/badge/Powered%20By-Upstash%20Suite-00E599?logo=redis)](https://upstash.com)
@@ -6,7 +6,7 @@
 [![Deployed on Vercel](https://img.shields.io/badge/Deploy%20Ready-Vercel-000000?logo=vercel)](https://vercel.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**UpCloud Vault** 是一套专为 **Vercel Serverless** 环境量身定制的高性能、轻量级个人云端存储与文档智能检索平台。系统采用**现代化 iOS 明亮扁平磨砂玻璃透明 (Frosted Glassmorphism)** UI 设计风格，深度融合了 **Upstash** 云原生无服务器套件（Blob、Vector、QStash、Redis），并配备**单用户环境变量安全登录**系统。
+**Fast Storage** 是一套专为 **Vercel Serverless** 环境量身定制的高性能、轻量级个人云端存储与文档智能检索平台。系统采用**现代化 iOS 明亮扁平磨砂玻璃透明 (Frosted Glassmorphism)** UI 设计风格，深度融合了 **Upstash** 云原生无服务器套件（Blob、Vector、QStash、Redis），并配备**单用户环境变量安全登录**系统。
 
 ---
 
@@ -129,7 +129,7 @@ npm run dev
 ### 步骤 1：推送代码至 GitHub
 ```bash
 git add .
-git commit -m "feat: complete iOS glassmorphism UpCloud Vault with auth and Redis studio"
+git commit -m "feat: complete iOS glassmorphism Fast Storage with auth and Redis studio"
 git push origin main
 ```
 

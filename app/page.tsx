@@ -29,6 +29,18 @@ export default function HomePage() {
   // iOS Light / Dark Mode State (Defaults to pure white theme)
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
+  // Sidebar collapse / expand state
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return localStorage.getItem('fast_storage_sidebar_collapsed') === 'true';
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  });
+
   // Modals state
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
@@ -46,6 +58,16 @@ export default function HomePage() {
 
   const toggleTheme = () => {
     setIsDarkMode((prev) => !prev);
+  };
+
+  const handleToggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('fast_storage_sidebar_collapsed', String(next));
+      }
+      return next;
+    });
   };
 
   const fetchDocuments = useCallback(async () => {
@@ -93,7 +115,9 @@ export default function HomePage() {
 
     const checkAuthAndLoad = async () => {
       try {
-        const localToken = typeof window !== 'undefined' ? localStorage.getItem('upcloud_session_token') : null;
+        const localToken = typeof window !== 'undefined'
+          ? (localStorage.getItem('fast_storage_session_token') || localStorage.getItem('upcloud_session_token'))
+          : null;
         const authRes = await fetch('/api/auth/me', {
           headers: localToken ? { 'x-session-token': localToken } : {},
         });
@@ -163,7 +187,9 @@ export default function HomePage() {
 
   const handleLogout = async () => {
     try {
-      const localToken = typeof window !== 'undefined' ? localStorage.getItem('upcloud_session_token') : null;
+      const localToken = typeof window !== 'undefined'
+        ? (localStorage.getItem('fast_storage_session_token') || localStorage.getItem('upcloud_session_token'))
+        : null;
       await fetch('/api/auth/logout', {
         method: 'POST',
         headers: localToken ? { 'x-session-token': localToken } : {},
@@ -172,6 +198,7 @@ export default function HomePage() {
       console.error('Logout error:', err);
     } finally {
       if (typeof window !== 'undefined') {
+        localStorage.removeItem('fast_storage_session_token');
         localStorage.removeItem('upcloud_session_token');
       }
       setIsAuthenticated(false);
@@ -250,10 +277,12 @@ export default function HomePage() {
           onSelectTab={setCurrentTab}
           status={status}
           docsCount={documents.length}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={handleToggleSidebar}
         />
 
         {/* Content Viewport */}
-        <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 p-6 lg:p-8 overflow-y-auto transition-all duration-300 min-w-0">
           {currentTab === 'overview' && (
             <OverviewView
               session={session}

@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     } else if (doc.fullText) {
       fileBuffer = new TextEncoder().encode(doc.fullText);
     } else {
-      fileBuffer = new TextEncoder().encode(`UpCloud Vault Document: ${doc.name}\n\n${doc.summary}`);
+      fileBuffer = new TextEncoder().encode(`Fast Storage Document: ${doc.name}\n\n${doc.summary}`);
     }
 
     // Set proper headers to trigger browser attachment download

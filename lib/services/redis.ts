@@ -23,7 +23,7 @@ class InMemoryCacheStore {
 
   private seedDemoKeys() {
     this.set('system:version', 'v2.4.0-serverless', 86400 * 30);
-    this.set('app:name', 'UpCloud Vault', 86400 * 30);
+    this.set('app:name', 'Fast Storage', 86400 * 30);
     this.set('demo:counter:visitors', 1042, 86400 * 7);
     this.set('rate_limit:sample_ip_192.168.1.1', 3, 10);
   }

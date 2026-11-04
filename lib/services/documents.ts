@@ -21,7 +21,7 @@ const INITIAL_SEED_DOCUMENTS: DocumentItem[] = [
     tags: ['系统架构', 'Serverless', 'Vercel', 'Upstash'],
     vectorId: 'vec_doc_upstash_architecture',
     contentSnippet: 'Serverless 架构在 Vercel 等 Serverless 环境下需避免长连接 TCP 耗尽。通过 Upstash 基于 HTTP REST 的通信机制，冷启动延迟降低至 15ms 以内，结合 QStash 消息队列提供自动重试机制。',
-    fullText: `UpCloud 个人云端存储与向量智能架构指南：
+    fullText: `Fast Storage 个人云端存储与向量智能架构指南：
 1. 对象存储层：利用 Upstash Blob 实现用户头像与私有文档的高速云端存取与 CDN 加速。
 2. 语义智能检索：基于 Upstash Vector 内置 Dense Embedding 向量模型，无需额外配置 OpenAI 即可实现中文与英文语义搜索。
 3. 异步任务编排：采用 QStash 实现背景异步处理，解耦文档上传响应与耗时的向量嵌入。

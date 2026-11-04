@@ -20,7 +20,7 @@ export function AvatarModal({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [name, setName] = useState(session?.name || 'Alex Morgan');
-  const [email, setEmail] = useState(session?.email || 'alex.morgan@upcloud.dev');
+  const [email, setEmail] = useState(session?.email || 'alex.morgan@faststorage.dev');
   const [role, setRole] = useState(session?.role || '云架构师与研究员');
   const [isUploading, setIsUploading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);

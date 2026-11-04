@@ -59,7 +59,7 @@ export function TopBar({
             <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
               <span className="w-2.5 h-2.5 bg-white rounded-full" />
             </div>
-            <span className="font-semibold">UpCloud Vault</span>
+            <span className="font-semibold">Fast Storage</span>
           </button>
         </div>
 

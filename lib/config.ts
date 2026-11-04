@@ -1,5 +1,5 @@
 /**
- * UpCloud Vault Configuration & Environment Management
+ * Fast Storage Configuration & Environment Management
  * Handles environment variables with clean dynamic getters and Vercel Serverless detection.
  */
 
