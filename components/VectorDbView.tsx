@@ -32,6 +32,8 @@ export function VectorDbView() {
   const [search, setSearch] = useState('');
   const [live, setLive] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   // 编辑/新增表单
   const [editOpen, setEditOpen] = useState(false);
@@ -49,7 +51,7 @@ export function VectorDbView() {
       setError(null);
       try {
         const url = new URL('/api/vector', window.location.origin);
-        url.searchParams.set('limit', '10');
+        url.searchParams.set('limit', '30');
         const cur = reset ? undefined : cursor;
         if (cur) url.searchParams.set('cursor', cur);
         const res = await fetch(url.toString());
@@ -79,7 +81,7 @@ export function VectorDbView() {
       setError(null);
       try {
         const url = new URL('/api/vector', window.location.origin);
-        url.searchParams.set('limit', '10');
+        url.searchParams.set('limit', '30');
         const res = await fetch(url.toString(), { signal: ac.signal });
         const data = await res.json();
         if (!active) return;
@@ -177,8 +179,52 @@ export function VectorDbView() {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || '删除失败');
       setRows((prev) => prev.filter((r) => r.id !== row.id));
+      setSelected((prev) => { const next = new Set(prev); next.delete(row.id); return next; });
     } catch (err) {
       setError(err instanceof Error ? err.message : '删除失败');
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const allVisibleSelected = filteredRows.length > 0 && filteredRows.every((r) => selected.has(r.id));
+  const toggleSelectAll = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) {
+        filteredRows.forEach((r) => next.delete(r.id));
+      } else {
+        filteredRows.forEach((r) => next.add(r.id));
+      }
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (!confirm(`确定从向量库中删除选中的 ${ids.length} 条记录吗？此操作不可撤销。`)) return;
+    setBulkDeleting(true);
+    setError(null);
+    try {
+      const qs = ids.map((id) => `id=${encodeURIComponent(id)}`).join('&');
+      const res = await fetch(`/api/vector?${qs}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || '批量删除失败');
+      const removed = new Set(ids);
+      setRows((prev) => prev.filter((r) => !removed.has(r.id)));
+      setSelected(new Set());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '批量删除失败');
+    } finally {
+      setBulkDeleting(false);
     }
   };
 
@@ -274,13 +320,49 @@ export function VectorDbView() {
         </div>
       )}
 
+      {/* 批量操作栏（选中时显示） */}
+      {selected.size > 0 && (
+        <div className="flex items-center justify-between gap-3 p-3 rounded-2xl liquid-glass border border-rose-500/30">
+          <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+            已选中 {selected.size} 条记录
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelected(new Set())}
+              disabled={bulkDeleting}
+              className="liquid-pill px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
+            >
+              取消选择
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              disabled={bulkDeleting}
+              className="liquid-pill flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-rose-600 dark:text-rose-400 border-rose-500/40 hover:bg-rose-500/10 cursor-pointer disabled:opacity-40"
+            >
+              {bulkDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              <span>{bulkDeleting ? '删除中...' : `删除选中 (${selected.size})`}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 数据表 */}
       <div className="rounded-3xl liquid-glass overflow-hidden shadow-md">
-        <div className="grid grid-cols-12 px-5 py-3.5 border-b border-black/5 dark:border-white/10 text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider font-mono">
-          <div className="col-span-3">ID</div>
-          <div className="col-span-6 sm:col-span-4">文本内容 (data)</div>
+        <div className="grid grid-cols-12 px-4 sm:px-5 py-3.5 border-b border-black/5 dark:border-white/10 text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider font-mono items-center">
+          <div className="col-span-1 flex items-center">
+            <input
+              type="checkbox"
+              checked={allVisibleSelected}
+              onChange={toggleSelectAll}
+              disabled={filteredRows.length === 0}
+              className="w-3.5 h-3.5 accent-rose-500 cursor-pointer"
+              title="全选/取消当前页"
+            />
+          </div>
+          <div className="col-span-3 sm:col-span-3">ID</div>
+          <div className="col-span-5 sm:col-span-4">文本内容 (data)</div>
           <div className="hidden sm:block sm:col-span-2">元数据 (metadata)</div>
-          <div className="col-span-3 text-right">操作</div>
+          <div className="col-span-3 sm:col-span-2 text-right">操作</div>
         </div>
 
         {isLoading ? (
@@ -314,14 +396,29 @@ export function VectorDbView() {
         ) : (
           <div className="divide-y divide-black/5 dark:divide-white/10">
             {filteredRows.map((row) => (
-              <div key={row.id} className="grid grid-cols-12 items-start px-5 py-4 hover:bg-white/40 dark:hover:bg-white/5 transition-colors text-xs">
-                <div className="col-span-3 pr-3 min-w-0">
+              <div
+                key={row.id}
+                className={`grid grid-cols-12 items-start px-4 sm:px-5 py-4 transition-colors text-xs ${
+                  selected.has(row.id) ? 'bg-rose-500/10' : 'hover:bg-white/40 dark:hover:bg-white/5'
+                }`}
+              >
+                <div className="col-span-1 flex items-center justify-center pr-2">
+                  <input
+                    type="checkbox"
+                    checked={selected.has(row.id)}
+                    onChange={() => toggleSelect(row.id)}
+                    className="w-3.5 h-3.5 accent-rose-500 cursor-pointer"
+                    title="选中"
+                  />
+                </div>
+
+                <div className="col-span-3 sm:col-span-3 pr-3 min-w-0">
                   <div className="font-mono font-semibold text-slate-900 dark:text-white truncate" title={row.id}>
                     {row.id}
                   </div>
                 </div>
 
-                <div className="col-span-6 sm:col-span-4 pr-3 min-w-0">
+                <div className="col-span-5 sm:col-span-4 pr-3 min-w-0">
                   <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
                     <FileText className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                     <span className="line-clamp-2 break-words leading-relaxed">
@@ -340,7 +437,7 @@ export function VectorDbView() {
                   )}
                 </div>
 
-                <div className="col-span-3 flex items-center justify-end gap-1.5">
+                <div className="col-span-3 sm:col-span-2 flex items-center justify-end gap-1.5">
                   <button
                     onClick={() => openEdit(row)}
                     title="修改"
@@ -364,7 +461,7 @@ export function VectorDbView() {
         {hasMore && !isLoading && filteredRows.length > 0 && (
           <div className="p-4 border-t border-black/5 dark:border-white/10 flex items-center justify-between">
             <span className="text-[11px] text-slate-500 dark:text-slate-300 font-mono">
-              每页 10 条 · 已加载 {rows.length} 条
+              每页 30 条 · 已加载 {rows.length} 条
             </span>
             <button
               onClick={() => fetchPage(false)}

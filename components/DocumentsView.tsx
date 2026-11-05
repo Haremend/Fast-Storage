@@ -23,7 +23,7 @@ interface DocumentsViewProps {
   onOpenVectorDb: () => void;
 }
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 30;
 
 const isTextLike = (doc: DocumentItem) =>
   doc.type?.startsWith('text/') ||
@@ -44,6 +44,8 @@ export function DocumentsView({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [indexingKey, setIndexingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   // 远程文件夹分类（Upstash Blob 中的目录前缀）
   const folderTabs = [
@@ -139,9 +141,19 @@ export function DocumentsView({
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || '删除失败');
       setDocs((prev) => prev.filter((d) => d.id !== doc.id));
+      setSelected((prev) => { const next = new Set(prev); next.delete(doc.id); return next; });
     } catch (err) {
       setError(err instanceof Error ? err.message : '删除失败');
     }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   const handleCopyLink = (doc: DocumentItem, e: React.MouseEvent) => {
@@ -197,6 +209,40 @@ export function DocumentsView({
     }
     return true;
   });
+
+  const allVisibleSelected = filteredDocs.length > 0 && filteredDocs.every((d) => selected.has(d.id));
+  const toggleSelectAll = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) {
+        filteredDocs.forEach((d) => next.delete(d.id));
+      } else {
+        filteredDocs.forEach((d) => next.add(d.id));
+      }
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (!confirm(`确定从 Upstash Blob 永久删除选中的 ${ids.length} 个文件吗？此操作不可撤销。`)) return;
+    setBulkDeleting(true);
+    setError(null);
+    try {
+      const qs = ids.map((id) => `key=${encodeURIComponent(id)}`).join('&');
+      const res = await fetch(`/api/documents?${qs}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || '批量删除失败');
+      const removed = new Set(ids);
+      setDocs((prev) => prev.filter((d) => !removed.has(d.id)));
+      setSelected(new Set());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '批量删除失败');
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -269,10 +315,46 @@ export function DocumentsView({
         </div>
       )}
 
+      {/* 批量操作栏（选中时显示） */}
+      {selected.size > 0 && (
+        <div className="flex items-center justify-between gap-3 p-3 rounded-2xl liquid-glass border border-rose-500/30">
+          <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+            已选中 {selected.size} 个文件
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelected(new Set())}
+              disabled={bulkDeleting}
+              className="liquid-pill px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"
+            >
+              取消选择
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              disabled={bulkDeleting}
+              className="liquid-pill flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-rose-600 dark:text-rose-400 border-rose-500/40 hover:bg-rose-500/10 cursor-pointer disabled:opacity-40"
+            >
+              {bulkDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              <span>{bulkDeleting ? '删除中...' : `删除选中 (${selected.size})`}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 文件列表 */}
       <div className="rounded-3xl liquid-glass overflow-hidden shadow-md">
-        <div className="grid grid-cols-12 px-6 py-3.5 border-b border-black/5 dark:border-white/10 text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider font-mono">
-          <div className="col-span-6 sm:col-span-5">文件名与摘要</div>
+        <div className="grid grid-cols-12 px-4 sm:px-6 py-3.5 border-b border-black/5 dark:border-white/10 text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider font-mono items-center">
+          <div className="col-span-1 flex items-center">
+            <input
+              type="checkbox"
+              checked={allVisibleSelected}
+              onChange={toggleSelectAll}
+              disabled={filteredDocs.length === 0}
+              className="w-3.5 h-3.5 accent-rose-500 cursor-pointer"
+              title="全选/取消当前页"
+            />
+          </div>
+          <div className="col-span-5 sm:col-span-4">文件名与摘要</div>
           <div className="hidden sm:block sm:col-span-2">分类</div>
           <div className="col-span-3 sm:col-span-2 text-right sm:text-left">大小 / 日期</div>
           <div className="hidden sm:block sm:col-span-1">向量</div>
@@ -323,12 +405,27 @@ export function DocumentsView({
               return (
                 <div
                   key={doc.id}
-                  className="grid grid-cols-12 items-center px-6 py-4 hover:bg-white/40 dark:hover:bg-white/5 transition-colors group text-xs"
+                  className={`grid grid-cols-12 items-center px-4 sm:px-6 py-4 transition-colors group text-xs ${
+                    selected.has(doc.id)
+                      ? 'bg-rose-500/10'
+                      : 'hover:bg-white/40 dark:hover:bg-white/5'
+                  }`}
                 >
+                  {/* 复选框 */}
+                  <div className="col-span-1 flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(doc.id)}
+                      onChange={() => toggleSelect(doc.id)}
+                      className="w-3.5 h-3.5 accent-rose-500 cursor-pointer"
+                      title="选中"
+                    />
+                  </div>
+
                   {/* 文件名与摘要 */}
                   <div
                     onClick={() => onSelectDocument(doc)}
-                    className="col-span-6 sm:col-span-5 flex items-start gap-3.5 cursor-pointer min-w-0 pr-2"
+                    className="col-span-5 sm:col-span-4 flex items-start gap-3.5 cursor-pointer min-w-0 pr-2"
                   >
                     <div className="w-9 h-9 rounded-2xl liquid-glass-subtle text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                       <FileText className="w-4 h-4" />

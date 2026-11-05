@@ -114,15 +114,25 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const key = req.nextUrl.searchParams.get('key') || req.nextUrl.searchParams.get('id');
-    if (!key) {
+    // 支持批量：?key=a&key=b...（也兼容单个 ?key= 与 ?id=）
+    const keys = req.nextUrl.searchParams.getAll('key');
+    const idFallback = req.nextUrl.searchParams.get('id');
+    const targets = keys.length > 0 ? keys : idFallback ? [idFallback] : [];
+
+    if (targets.length === 0) {
       return NextResponse.json({ success: false, error: 'Document key is required' }, { status: 400 });
     }
 
-    const success = await DocumentService.deleteDocument(key);
+    let deleted = 0;
+    for (const key of targets) {
+      if (await DocumentService.deleteDocument(key)) deleted += 1;
+    }
+
     return NextResponse.json({
-      success,
-      message: success ? 'Document deleted from Blob, Vector index, and metadata cache' : 'Document not found',
+      success: deleted > 0,
+      deleted,
+      total: targets.length,
+      message: `已删除 ${deleted} / ${targets.length} 个文件`,
     });
   } catch (error) {
     return NextResponse.json(

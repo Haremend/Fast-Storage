@@ -92,12 +92,16 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ success: ok, reset: true });
     }
 
-    const id = req.nextUrl.searchParams.get('id');
-    if (!id) {
+    // 支持批量：?id=a&id=b...
+    const ids = req.nextUrl.searchParams.getAll('id');
+    if (ids.length === 0) {
       return NextResponse.json({ success: false, error: 'id is required' }, { status: 400 });
     }
-    await VectorService.delete(id);
-    return NextResponse.json({ success: true, id });
+
+    for (const id of ids) {
+      await VectorService.delete(id);
+    }
+    return NextResponse.json({ success: true, deleted: ids.length, ids });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : 'Failed to delete vector' },
