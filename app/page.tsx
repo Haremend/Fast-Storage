@@ -402,7 +402,7 @@ export default function HomePage() {
       {/* Main Workspace Layout */}
       <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 py-4">
         {/* Liquid Glass Content Viewport */}
-        <main className="overflow-x-hidden overflow-y-auto transition-all duration-300 min-w-0 pb-12">
+        <main className="transition-all duration-300 min-w-0 pb-4">
           {currentTab === 'overview' && (
             <OverviewView
               session={session}
