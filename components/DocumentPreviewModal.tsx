@@ -163,7 +163,7 @@ export function DocumentPreviewModal({
               <Layers className="w-3.5 h-3.5 text-emerald-500" />
               <span>CONTENT PREVIEW / 文档摘要与正文提取预览</span>
             </div>
-            <div className="p-4 rounded-2xl liquid-glass-subtle text-slate-800 dark:text-slate-200 leading-relaxed font-mono whitespace-pre-wrap max-h-48 overflow-y-auto text-[11px]">
+            <div className="p-4 rounded-2xl liquid-glass-subtle text-slate-800 dark:text-slate-200 leading-relaxed font-mono whitespace-pre-wrap break-words max-h-48 overflow-y-auto text-[11px]">
               {document.fullText || document.summary || '未提取到正文文本。'}
             </div>
           </div>

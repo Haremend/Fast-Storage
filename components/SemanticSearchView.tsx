@@ -286,7 +286,7 @@ export function SemanticSearchView({
               </div>
 
               {/* 语义匹配摘录 */}
-              <div className="p-4 rounded-2xl liquid-glass-subtle text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-mono text-[11px]">
+              <div className="p-4 rounded-2xl liquid-glass-subtle text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-mono text-[11px] break-words">
                 {item.matchedSnippet}
               </div>
 
