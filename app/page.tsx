@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { TopBar } from '@/components/TopBar';
 import { OverviewView } from '@/components/OverviewView';
 import { DocumentsView } from '@/components/DocumentsView';
-import { SemanticSearchView } from '@/components/SemanticSearchView';
+import { VectorDbView } from '@/components/VectorDbView';
 import { TaskQueueView } from '@/components/TaskQueueView';
 import { RedisStudioView } from '@/components/RedisStudioView';
 import { SystemStatusView } from '@/components/SystemStatusView';
@@ -60,7 +60,6 @@ export default function HomePage() {
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
   const [isWallpaperOpen, setIsWallpaperOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<DocumentItem | null>(null);
-  const [semanticQuery, setSemanticQuery] = useState('');
 
   // Initialize theme class
   useEffect(() => {
@@ -293,8 +292,8 @@ export default function HomePage() {
     }
   };
 
-  const handleTriggerSemanticSearch = (query: string) => {
-    setSemanticQuery(query);
+  const handleTriggerSemanticSearch = () => {
+    // 向量数据库视图不接收查询词；这里只负责切换到该标签页
     setCurrentTab('search');
   };
 
@@ -414,7 +413,6 @@ export default function HomePage() {
               onSelectDocument={setSelectedDoc}
               onOpenUpload={() => setIsUploadOpen(true)}
               onOpenAvatar={() => setIsAvatarOpen(true)}
-              onTriggerSemanticSearch={handleTriggerSemanticSearch}
             />
           )}
 
@@ -422,16 +420,11 @@ export default function HomePage() {
             <DocumentsView
               onSelectDocument={(doc) => handleSelectDocument(doc.id)}
               onOpenUpload={() => setIsUploadOpen(true)}
-              onTriggerSemanticSearch={handleTriggerSemanticSearch}
+              onOpenVectorDb={handleTriggerSemanticSearch}
             />
           )}
 
-          {currentTab === 'search' && (
-            <SemanticSearchView
-              initialQuery={semanticQuery}
-              onSelectDocument={setSelectedDoc}
-            />
-          )}
+          {currentTab === 'search' && <VectorDbView />}
 
           {currentTab === 'queue' && <TaskQueueView />}
 

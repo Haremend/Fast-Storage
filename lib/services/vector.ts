@@ -21,6 +21,20 @@ export interface VectorSearchResult {
   metadata?: VectorMetadata;
 }
 
+/** A raw vector DB record, as shown by the Navicat-style browser. */
+export interface VectorRecord {
+  id: string;
+  data?: string;
+  vector?: number[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface VectorListPage {
+  vectors: VectorRecord[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
 // In-memory semantic vector store for local preview/development
 interface LocalVectorEntry {
   id: string;
@@ -262,5 +276,139 @@ export const VectorService = {
 
   getCount(): number {
     return localIndex.size;
+  },
+
+  /**
+   * Navicat-style table scan: paginate every vector in the index.
+   */
+  async listAll(options: { cursor?: string; limit?: number } = {}): Promise<VectorListPage> {
+    const limit = Math.min(Math.max(options.limit ?? 10, 1), 100);
+
+    const index = getVectorIndex();
+    if (index) {
+      try {
+        const result = await index.range({
+          cursor: options.cursor ?? 0,
+          limit,
+          includeMetadata: true,
+          includeData: true,
+        });
+        const vectors: VectorRecord[] = (result.vectors || []).map((v) => ({
+          id: String(v.id),
+          data: v.data,
+          vector: v.vector,
+          metadata: v.metadata as Record<string, unknown> | undefined,
+        }));
+        const nextCursor = result.nextCursor || null;
+        return { vectors, nextCursor, hasMore: Boolean(nextCursor) && vectors.length > 0 };
+      } catch (err) {
+        console.warn('[Vector] Live range failed, using local store:', err);
+      }
+    }
+
+    // Local (mock) store: offset-encoded cursor
+    const entries = Array.from(localIndex.entries());
+    const offset = options.cursor ? parseInt(options.cursor, 10) || 0 : 0;
+    const page = entries.slice(offset, offset + limit);
+    const vectors: VectorRecord[] = page.map(([id, entry]) => ({
+      id,
+      data: entry.text,
+      metadata: entry.metadata as Record<string, unknown> | undefined,
+    }));
+    const nextOffset = offset + page.length;
+    const hasMore = nextOffset < entries.length;
+    return { vectors, nextCursor: hasMore ? String(nextOffset) : null, hasMore };
+  },
+
+  /** Fetch a single vector by id. */
+  async inspect(id: string): Promise<VectorRecord | null> {
+    const index = getVectorIndex();
+    if (index) {
+      try {
+        const result = await index.fetch([id], {
+          includeMetadata: true,
+          includeData: true,
+          includeVectors: false,
+        });
+        const item = result?.[0];
+        if (!item) return null;
+        return {
+          id: String(item.id),
+          data: item.data,
+          metadata: item.metadata as Record<string, unknown> | undefined,
+        };
+      } catch (err) {
+        console.warn(`[Vector] Live fetch failed for ${id}:`, err);
+        return null;
+      }
+    }
+    const entry = localIndex.get(id);
+    if (!entry) return null;
+    return {
+      id,
+      data: entry.text,
+      metadata: entry.metadata as Record<string, unknown> | undefined,
+    };
+  },
+
+  /**
+   * Insert / overwrite a vector record. `data` is plain text — Upstash
+   * embeds it with the index's built-in model. In mock mode we tokenize
+   * locally so the row is at least present.
+   */
+  async upsertRaw(options: {
+    id: string;
+    data: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<string> {
+    const { id, data, metadata = {} } = options;
+    const index = getVectorIndex();
+    if (index) {
+      await index.upsert({ id, data, metadata });
+      return id;
+    }
+    const { tokens, magnitude } = vectorizeText(data);
+    localIndex.set(id, {
+      id,
+      text: data,
+      metadata: metadata as VectorMetadata,
+      tokens,
+      magnitude,
+    });
+    return id;
+  },
+
+  /** Patch a record's metadata without re-embedding. */
+  async updateMetadata(id: string, metadata: Record<string, unknown>): Promise<boolean> {
+    const index = getVectorIndex();
+    if (index) {
+      try {
+        await index.update({ id, metadata });
+        return true;
+      } catch (err) {
+        console.warn(`[Vector] Live update failed for ${id}:`, err);
+        return false;
+      }
+    }
+    const entry = localIndex.get(id);
+    if (!entry) return false;
+    entry.metadata = { ...entry.metadata, ...metadata } as VectorMetadata;
+    return true;
+  },
+
+  /** Wipe the entire index. Destructive — used by the 清空 button. */
+  async clear(): Promise<boolean> {
+    const index = getVectorIndex();
+    if (index) {
+      try {
+        await index.reset();
+        return true;
+      } catch (err) {
+        console.warn('[Vector] Live reset failed:', err);
+        return false;
+      }
+    }
+    localIndex.clear();
+    return true;
   },
 };

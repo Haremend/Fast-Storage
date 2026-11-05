@@ -20,7 +20,7 @@ import { DocumentItem } from '@/lib/types';
 interface DocumentsViewProps {
   onSelectDocument: (doc: DocumentItem) => void;
   onOpenUpload: () => void;
-  onTriggerSemanticSearch: (query: string) => void;
+  onOpenVectorDb: () => void;
 }
 
 const PAGE_SIZE = 20;
@@ -32,7 +32,7 @@ const isTextLike = (doc: DocumentItem) =>
 export function DocumentsView({
   onSelectDocument,
   onOpenUpload,
-  onTriggerSemanticSearch,
+  onOpenVectorDb,
 }: DocumentsViewProps) {
   const [docs, setDocs] = useState<DocumentItem[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -178,11 +178,11 @@ export function DocumentsView({
       if (!res.ok || !data.success) {
         throw new Error(data.error || '向量化失败');
       }
-      // Mark as indexed locally, then jump to 语义检索舱 with the prepared query
+      // Mark as indexed locally, then jump to 向量数据库 to inspect the new record
       setDocs((prev) =>
         prev.map((d) => (d.id === doc.id ? { ...d, status: 'indexed', vectorId: data.vectorId || d.vectorId } : d))
       );
-      onTriggerSemanticSearch(data.query || doc.name.replace(/\.[^/.]+$/, ''));
+      onOpenVectorDb();
     } catch (err) {
       setError(err instanceof Error ? err.message : '向量化失败');
     } finally {
@@ -377,12 +377,12 @@ export function DocumentsView({
 
                   {/* 操作区 */}
                   <div className="col-span-3 sm:col-span-2 flex items-center justify-end gap-1.5">
-                    {/* 转到语义检索（仅文本文件） */}
+                    {/* 转入向量数据库（仅文本文件） */}
                     {textLike && (
                       <button
                         onClick={(e) => handleIndexAndSearch(doc, e)}
                         disabled={indexingKey === doc.id}
-                        title="转为语义向量并跳转到语义检索舱"
+                        title="转为语义向量并跳转到向量数据库查看记录"
                         className="liquid-orb w-8 h-8 text-slate-600 dark:text-slate-300 hover:text-purple-600 cursor-pointer disabled:opacity-50"
                       >
                         {indexingKey === doc.id ? (

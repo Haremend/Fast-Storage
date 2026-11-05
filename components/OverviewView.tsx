@@ -25,7 +25,6 @@ interface OverviewViewProps {
   onSelectDocument: (doc: DocumentItem) => void;
   onOpenUpload: () => void;
   onOpenAvatar: () => void;
-  onTriggerSemanticSearch: (query: string) => void;
 }
 
 export function OverviewView({
@@ -37,7 +36,6 @@ export function OverviewView({
   onSelectDocument,
   onOpenUpload,
   onOpenAvatar,
-  onTriggerSemanticSearch,
 }: OverviewViewProps) {
   const recentDocs = documents.slice(0, 4);
   const activeTasks = tasks.filter((t) => t.status === 'processing' || t.status === 'pending');
@@ -234,44 +232,6 @@ export function OverviewView({
             <span>架构与连接遥测</span>
             <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
           </div>
-        </div>
-      </div>
-
-      {/* 快捷语义概念检索体验 (液态搜索胶囊) */}
-      <div className="p-6 rounded-3xl liquid-glass space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full bg-purple-500/15 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-purple-500" />
-            </div>
-            <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
-              QUICK SEMANTIC LAB / 快速语义体验
-            </h3>
-          </div>
-          <button
-            onClick={() => onSelectTab('search')}
-            className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-500 font-semibold flex items-center gap-1 cursor-pointer"
-          >
-            <span>进入完整智能检索舱</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        <div className="flex flex-wrap gap-2.5 pt-1">
-          {[
-            'Serverless 无状态架构与冷启动消除',
-            '余弦相似度计算与高维向量嵌入',
-            'Vercel 部署规范与环境变量清单',
-            'QStash 异步解耦与削峰处理',
-          ].map((queryText) => (
-            <button
-              key={queryText}
-              onClick={() => onTriggerSemanticSearch(queryText)}
-              className="liquid-pill px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:text-purple-600 dark:hover:text-purple-300 transition-all cursor-pointer text-left"
-            >
-              &ldquo;{queryText}&rdquo;
-            </button>
-          ))}
         </div>
       </div>
 

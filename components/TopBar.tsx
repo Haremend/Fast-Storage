@@ -47,7 +47,7 @@ export function TopBar({
   const navItems: { id: string; label: string; icon: LucideIcon; count?: number }[] = [
     { id: 'overview', label: '工作台概览', icon: LayoutDashboard },
     { id: 'documents', label: '文件管理', icon: FolderArchive, count: docsCount },
-    { id: 'search', label: '语义检索舱', icon: Sparkles },
+    { id: 'search', label: '向量数据库', icon: Database },
     { id: 'queue', label: 'QStash 队列舱', icon: Activity },
     { id: 'redis', label: 'Redis 空间与用例', icon: Server },
     { id: 'system', label: '云端架构诊断', icon: Database },
