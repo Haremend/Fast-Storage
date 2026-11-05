@@ -16,12 +16,21 @@ export async function GET(req: NextRequest) {
     const cursor = req.nextUrl.searchParams.get('cursor') || undefined;
     const limitParam = req.nextUrl.searchParams.get('limit');
     const prefix = req.nextUrl.searchParams.get('prefix') || undefined;
+    const sortByParam = req.nextUrl.searchParams.get('sortBy');
+    const orderParam = req.nextUrl.searchParams.get('order');
     const limit = limitParam ? parseInt(limitParam, 10) : 20;
 
-    const { documents, cursor: nextCursor, hasMore, blobLive } = await DocumentService.listAll({
+    const sortBy: 'size' | 'date' | undefined =
+      sortByParam === 'size' || sortByParam === 'date' ? sortByParam : undefined;
+    const order: 'asc' | 'desc' | undefined =
+      orderParam === 'asc' || orderParam === 'desc' ? orderParam : undefined;
+
+    const { documents, cursor: nextCursor, hasMore, blobLive, sorted } = await DocumentService.listAll({
       cursor,
       limit: Number.isFinite(limit) ? limit : 20,
       prefix: prefix || undefined,
+      sortBy,
+      order,
     });
 
     return NextResponse.json({
@@ -31,6 +40,7 @@ export async function GET(req: NextRequest) {
       hasMore,
       count: documents.length,
       blobLive,
+      sorted,
     });
   } catch (error) {
     return NextResponse.json(

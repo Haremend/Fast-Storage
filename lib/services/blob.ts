@@ -206,6 +206,23 @@ export const BlobService = {
     };
   },
 
+  /**
+   * Fetch every blob under a prefix (capped at `max`, default 1000).
+   * Used when the caller needs server-side sorting across the whole set
+   * before paginating — Upstash's native cursor can't reorder.
+   */
+  async listAllFlat(options: { prefix?: string; max?: number } = {}): Promise<BlobListItem[]> {
+    const max = Math.min(Math.max(options.max ?? 1000, 1), 1000);
+    const all: BlobListItem[] = [];
+    let cursor: string | undefined;
+    do {
+      const page = await this.listAll({ prefix: options.prefix, limit: 100, cursor });
+      all.push(...page.items);
+      cursor = page.cursor ?? undefined;
+    } while (cursor && all.length < max);
+    return all.slice(0, max);
+  },
+
   async head(key: string): Promise<BlobHeadInfo | null> {
     if (envConfig.hasUpstashBlob) {
       try {

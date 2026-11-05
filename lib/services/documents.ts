@@ -54,30 +54,39 @@ function isTextLike(doc: DocumentItem): boolean {
 export const DocumentService = {
   /**
    * List all files from Upstash Blob, enriched with cached metadata.
-   * Supports cursor-based pagination (`cursor` + `limit`) and an optional
-   * `prefix` to scope the listing to a remote folder (e.g. "documents/",
-   * "wallpapers/", "avatars/"). When omitted, every folder is listed.
+   * Cursor-based pagination (`cursor` + `limit`). An optional `prefix`
+   * scopes the listing to a remote folder; `sortBy` (`size` | `date`)
+   * + `order` (`asc` | `desc`) sort on the server before pagination.
+   *
+   * NOTE: Upstash's native cursor can't reorder, so when a sort is
+   * requested we flatten the whole prefix first, sort, then slice.
+   * Default (no sort) keeps the native paginated list (newest upload order).
    */
-  async listAll(options: { cursor?: string; limit?: number; prefix?: string } = {}): Promise<{
+  async listAll(
+    options: {
+      cursor?: string;
+      limit?: number;
+      prefix?: string;
+      sortBy?: 'size' | 'date';
+      order?: 'asc' | 'desc';
+    } = {}
+  ): Promise<{
     documents: DocumentItem[];
     cursor: string | null;
     hasMore: boolean;
     count: number;
     blobLive: boolean;
+    sorted: boolean;
   }> {
     const limit = Math.min(Math.max(options.limit ?? 20, 1), 100);
+    const sortBy = options.sortBy;
+    const order = options.order === 'asc' ? 'asc' : 'desc';
 
-    const page = await BlobService.listAll({
-      cursor: options.cursor,
-      limit,
-      prefix: options.prefix,
-    });
-
-    // Load cached metadata (single Redis round-trip) to enrich the page
+    // Load cached metadata (single Redis round-trip) to enrich records
     const index = await RedisService.get<Record<string, Partial<DocumentItem>>>(REDIS_BLOB_INDEX_KEY);
     const indexMap = index && typeof index === 'object' ? index : {};
 
-    const documents: DocumentItem[] = page.items.map((item) => {
+    const enrich = (item: { key: string; url: string; size: number; uploadedAt: string; contentType?: string }): DocumentItem => {
       const name = nameFromKey(item.key);
       const cached = indexMap[item.key];
       return {
@@ -101,14 +110,45 @@ export const DocumentService = {
         duplicates: cached?.duplicates,
         relatedDocs: cached?.relatedDocs,
       };
-    });
+    };
 
+    // —— 排序模式：拉全量 → 服务端排序 → 分页 ——
+    if (sortBy) {
+      const allItems = await BlobService.listAllFlat({ prefix: options.prefix });
+      const dir = order === 'asc' ? 1 : -1;
+      allItems.sort((a, b) => {
+        if (sortBy === 'size') return (a.size - b.size) * dir;
+        // date
+        return (new Date(a.uploadedAt).getTime() - new Date(b.uploadedAt).getTime()) * dir;
+      });
+      const offset = options.cursor ? Math.max(0, parseInt(options.cursor, 10) || 0) : 0;
+      const slice = allItems.slice(offset, offset + limit);
+      const hasMore = offset + limit < allItems.length;
+      const documents = slice.map(enrich);
+      return {
+        documents,
+        cursor: hasMore ? String(offset + limit) : null,
+        hasMore,
+        count: documents.length,
+        blobLive: BlobService.isLive(),
+        sorted: true,
+      };
+    }
+
+    // —— 默认模式：Upstash 原生分页（按上传顺序）——
+    const page = await BlobService.listAll({
+      cursor: options.cursor,
+      limit,
+      prefix: options.prefix,
+    });
+    const documents: DocumentItem[] = page.items.map(enrich);
     return {
       documents,
       cursor: page.cursor,
       hasMore: page.hasMore,
       count: documents.length,
       blobLive: BlobService.isLive(),
+      sorted: false,
     };
   },
 

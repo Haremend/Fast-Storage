@@ -14,6 +14,8 @@ import {
   Check,
   ChevronRight,
   Loader2,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import { DocumentItem } from '@/lib/types';
 
@@ -46,6 +48,8 @@ export function DocumentsView({
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [sortBy, setSortBy] = useState<'size' | 'date' | null>(null);
+  const [order, setOrder] = useState<'asc' | 'desc'>('desc');
 
   // 远程文件夹分类（Upstash Blob 中的目录前缀）
   const folderTabs = [
@@ -75,6 +79,10 @@ export function DocumentsView({
         const url = new URL('/api/documents', window.location.origin);
         url.searchParams.set('limit', String(PAGE_SIZE));
         if (folder) url.searchParams.set('prefix', folder);
+        if (sortBy) {
+          url.searchParams.set('sortBy', sortBy);
+          url.searchParams.set('order', order);
+        }
         const currentCursor = reset ? null : cursor;
         if (currentCursor) url.searchParams.set('cursor', currentCursor);
 
@@ -95,10 +103,21 @@ export function DocumentsView({
         else setIsLoadingMore(false);
       }
     },
-    [activeFolder, cursor]
+    [activeFolder, cursor, sortBy, order]
   );
 
-  // 初始加载 + 切换文件夹时重置
+  const toggleSort = (field: 'size' | 'date') => {
+    if (sortBy === field) {
+      setOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(field);
+      setOrder('desc');
+    }
+    setCursor(null);
+    setHasMore(false);
+  };
+
+  // 初始加载 + 切换文件夹 / 排序变化时重置
   useEffect(() => {
     let active = true;
     const ac = new AbortController();
@@ -109,6 +128,10 @@ export function DocumentsView({
         const url = new URL('/api/documents', window.location.origin);
         url.searchParams.set('limit', String(PAGE_SIZE));
         if (activeFolder) url.searchParams.set('prefix', activeFolder);
+        if (sortBy) {
+          url.searchParams.set('sortBy', sortBy);
+          url.searchParams.set('order', order);
+        }
         const res = await fetch(url.toString(), { signal: ac.signal });
         const data = await res.json();
         if (!active) return;
@@ -127,7 +150,7 @@ export function DocumentsView({
       active = false;
       ac.abort();
     };
-  }, [activeFolder]);
+  }, [activeFolder, sortBy, order]);
 
   const switchFolder = (folder: string) => {
     if (folder === activeFolder) return;
@@ -356,7 +379,28 @@ export function DocumentsView({
           </div>
           <div className="col-span-5 sm:col-span-4">文件名与摘要</div>
           <div className="hidden sm:block sm:col-span-2">分类</div>
-          <div className="col-span-3 sm:col-span-2 text-right sm:text-left">大小 / 日期</div>
+          <div className="col-span-3 sm:col-span-2 flex items-center gap-3 justify-end sm:justify-start">
+            <button
+              onClick={() => toggleSort('date')}
+              className={`inline-flex items-center gap-1 cursor-pointer transition-colors ${
+                sortBy === 'date' ? 'text-emerald-600 dark:text-emerald-400' : 'hover:text-slate-900 dark:hover:text-white'
+              }`}
+              title="按上传时间排序"
+            >
+              <span>时间</span>
+              {sortBy === 'date' && (order === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+            </button>
+            <button
+              onClick={() => toggleSort('size')}
+              className={`inline-flex items-center gap-1 cursor-pointer transition-colors ${
+                sortBy === 'size' ? 'text-emerald-600 dark:text-emerald-400' : 'hover:text-slate-900 dark:hover:text-white'
+              }`}
+              title="按文件大小排序"
+            >
+              <span>大小</span>
+              {sortBy === 'size' && (order === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+            </button>
+          </div>
           <div className="hidden sm:block sm:col-span-1">向量</div>
           <div className="col-span-3 sm:col-span-2 text-right">操作与直链</div>
         </div>
