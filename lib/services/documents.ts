@@ -78,7 +78,7 @@ export const DocumentService = {
     const indexMap = index && typeof index === 'object' ? index : {};
 
     const documents: DocumentItem[] = page.items.map((item) => {
-      const name = item.key.includes('/') ? item.key.split('/').pop() || item.key : item.key;
+      const name = nameFromKey(item.key);
       const cached = indexMap[item.key];
       return {
         id: item.key,
@@ -117,7 +117,7 @@ export const DocumentService = {
     if (!head) return null;
     const index = await RedisService.get<Record<string, Partial<DocumentItem>>>(REDIS_BLOB_INDEX_KEY);
     const cached = index?.[key];
-    const name = key.includes('/') ? key.split('/').pop() || key : key;
+    const name = nameFromKey(key);
     return {
       id: key,
       name,

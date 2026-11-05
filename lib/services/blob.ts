@@ -94,7 +94,13 @@ export const BlobService = {
 
   async put(options: UploadOptions): Promise<BlobResult> {
     const { filename, data, contentType, folder = 'documents' } = options;
-    const sanitizedName = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+    // 仅剔除路径不安全字符（斜杠、反斜杠、控制符、保留符号），
+    // 保留中文/日文等 Unicode，避免中文文件名被替换成下划线。
+    const sanitizedName =
+      filename
+        .replace(/[\/\\:*?"<>|\x00-\x1f]/g, '_')
+        .replace(/^\.+/, '')
+        .trim() || 'file';
     const key = `${folder}/${Date.now()}-${sanitizedName}`;
     const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
     const size = buffer.length;

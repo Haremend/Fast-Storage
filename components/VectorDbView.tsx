@@ -380,8 +380,8 @@ export function VectorDbView() {
 
       {/* 新增 / 修改 记录弹窗 */}
       {editOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xl">
-          <div className="w-full max-w-lg liquid-glass rounded-3xl shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xl">
+          <div className="w-full max-w-2xl liquid-glass rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-black/5 dark:border-white/10">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-2xl liquid-glass-subtle flex items-center justify-center text-purple-600 dark:text-purple-400">
@@ -396,7 +396,7 @@ export function VectorDbView() {
               </button>
             </div>
 
-            <div className="p-6 space-y-4 text-xs">
+            <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4 text-xs">
               <div>
                 <label className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                   {isEditing ? '记录 ID (主键，不可改)' : '记录 ID (留空自动生成)'}
@@ -416,7 +416,7 @@ export function VectorDbView() {
                   文本内容 (data) — 用于生成向量
                 </label>
                 <textarea
-                  rows={4}
+                  rows={8}
                   value={editData}
                   onChange={(e) => setEditData(e.target.value)}
                   placeholder="输入要向量化的文本..."
@@ -429,7 +429,7 @@ export function VectorDbView() {
                   元数据 metadata (JSON，可选)
                 </label>
                 <textarea
-                  rows={4}
+                  rows={6}
                   value={editMeta}
                   onChange={(e) => {
                     setEditMeta(e.target.value);
