@@ -361,6 +361,25 @@ export const RedisService = {
     await this.del(`auth:session:${token}`);
   },
 
+  /** Delete all keys matching a glob pattern (e.g. "search:cache:*"). */
+  async deleteByPattern(pattern: string): Promise<number> {
+    const client = getRedisClient();
+    if (client) {
+      try {
+        const keys = await client.keys(pattern);
+        if (keys.length === 0) return 0;
+        await client.del(...keys);
+        return keys.length;
+      } catch (err) {
+        console.warn(`[Redis] deleteByPattern(${pattern}) failed:`, err);
+        return 0;
+      }
+    }
+    const keys = memoryStore.keys(pattern);
+    keys.forEach((k) => memoryStore.del(k));
+    return keys.length;
+  },
+
   // Wallpapers Management in Upstash Redis
   async getWallpaperHistory(): Promise<UploadedWallpaper[]> {
     const list = await this.get<UploadedWallpaper[]>('app:wallpapers:history');

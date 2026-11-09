@@ -1,7 +1,41 @@
 import { BlobService } from './blob';
 import { VectorService } from './vector';
+import { RedisService } from './redis';
 import { getDocIndex, setDocIndex } from './docIndex';
 import { DocumentItem } from '../types';
+
+/**
+ * mock 模式（无 Upstash Vector 凭证）的向量库是进程内 Map，冷启动后会
+ * 清空导致 dedup/related 失效。此函数在向量化前从 Redis 索引找回
+ * 有 fullText 的文档并重建向量索引（只执行一次）。
+ */
+let warmedOnce = false;
+async function ensureLocalIndexWarmed(): Promise<void> {
+  if (warmedOnce || VectorService.isLive()) return;
+  warmedOnce = true;
+  const index = await getDocIndex();
+  for (const [key, meta] of Object.entries(index)) {
+    if (!meta.fullText || VectorService.getCount() > Object.keys(index).length) break;
+    const doc: DocumentItem = {
+      id: key,
+      name: key.includes('/') ? key.split('/').pop() || key : key,
+      size: meta.size || 0,
+      type: meta.type || 'text/plain',
+      blobUrl: meta.blobUrl || '',
+      storageSource: 'simulated-blob',
+      uploadedAt: meta.uploadedAt || new Date().toISOString(),
+      status: 'indexed',
+      summary: meta.summary || '',
+      tags: meta.tags || [],
+      fullText: meta.fullText,
+    };
+    try {
+      await VectorService.upsertDocument(doc, meta.fullText);
+    } catch (err) {
+      console.warn(`[worker] warm vector failed for ${key}:`, err);
+    }
+  }
+}
 
 /**
  * 异步向量化任务的统一处理逻辑——既被 QStash worker 路由（live）
@@ -68,7 +102,8 @@ export async function runVectorizationTask(payload: {
 
   const vectorId = await VectorService.upsertDocument(doc, fullText);
 
-  // 4. 查相似：≥ 0.85 疑似重复，≥ 0.45 相关
+  // 4. 查相似：≥ 0.85 疑似重复，≥ 0.45 相关。mock 冷启动先恢复本地向量索引
+  await ensureLocalIndexWarmed();
   let duplicates: { id: string; name: string; similarity: number }[] = [];
   let related: { id: string; name: string; similarity: number }[] = [];
   const hits = await VectorService.query(fullText, 8);
@@ -94,6 +129,9 @@ export async function runVectorizationTask(payload: {
     contentSnippet: fullText.slice(0, 220),
   };
   await setDocIndex(index);
+
+  // 6. 新文档已可被搜索：失效旧的搜索缓存
+  await RedisService.deleteByPattern('search:cache:*').catch(() => {});
 
   return { ok: true, vectorId };
 }

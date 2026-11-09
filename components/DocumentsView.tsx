@@ -157,6 +157,35 @@ export function DocumentsView({
     setActiveFolder(folder);
   };
 
+  // 自动轮询：当有 processing 状态的文档时，每 3 秒拉一次首页数据，
+  // 只合并更新 processing 行（worker 异步完成后 status → indexed），
+  // 不替换整个列表以免打断用户正在浏览/多选的操作
+  const hasProcessing = docs.some((d) => d.status === 'processing');
+  useEffect(() => {
+    if (!hasProcessing) return;
+    let active = true;
+    const interval = setInterval(async () => {
+      try {
+        const url = new URL('/api/documents', window.location.origin);
+        url.searchParams.set('limit', String(PAGE_SIZE));
+        if (activeFolder) url.searchParams.set('prefix', activeFolder);
+        if (sortBy) { url.searchParams.set('sortBy', sortBy); url.searchParams.set('order', order); }
+        const res = await fetch(url.toString());
+        const data = await res.json();
+        if (!active || !data.success || !Array.isArray(data.documents)) return;
+        const byId = new Map(data.documents.map((d: DocumentItem) => [d.id, d]));
+        setDocs((prev) =>
+          prev.map((d) =>
+            d.status === 'processing' && byId.has(d.id)
+              ? { ...d, ...byId.get(d.id)! }
+              : d
+          )
+        );
+      } catch { /* silent */ }
+    }, 3000);
+    return () => { active = false; clearInterval(interval); };
+  }, [hasProcessing, activeFolder, sortBy, order]);
+
   const handleDelete = async (doc: DocumentItem) => {
     if (!confirm(`确定从 Upstash Blob 永久删除 "${doc.name}" 吗？`)) return;
     try {
