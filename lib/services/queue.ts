@@ -140,7 +140,12 @@ export const QueueService = {
 
     setTimeout(async () => {
       try {
-        // 向量索引已在上传时同步完成，队列任务仅做状态流转演示
+        if (task.taskType === 'extract_and_embed' && task.docId) {
+          // 动态导入 worker —— 避免 queue ↔ documents 的循环依赖
+          const { runVectorizationTask } = await import('./worker');
+          await runVectorizationTask({ taskId, docId: task.docId, docName: task.docName });
+        }
+
         task.status = 'completed';
         task.completedAt = new Date().toISOString();
         task.durationMs = Date.now() - startTime;
@@ -149,7 +154,7 @@ export const QueueService = {
         task.error = err instanceof Error ? err.message : '处理失败';
         task.durationMs = Date.now() - startTime;
       }
-    }, 450); // Fast realistic serverless latency
+    }, 450); // 模拟 serverless 排队 + 消费延迟
   },
 
   getTasks(): QueueTaskItem[] {

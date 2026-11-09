@@ -2,8 +2,8 @@ import { DocumentItem, SearchResultItem } from '../types';
 import { BlobService } from './blob';
 import { RedisService } from './redis';
 import { VectorService } from './vector';
-
-const REDIS_BLOB_INDEX_KEY = 'blob:documents:index';
+import { getDocIndex, setDocIndex } from './docIndex';
+import { QueueService } from './queue';
 
 /**
  * Blob index cache: key → document metadata.
@@ -83,7 +83,7 @@ export const DocumentService = {
     const order = options.order === 'asc' ? 'asc' : 'desc';
 
     // Load cached metadata (single Redis round-trip) to enrich records
-    const index = await RedisService.get<Record<string, Partial<DocumentItem>>>(REDIS_BLOB_INDEX_KEY);
+    const index = await getDocIndex();
     const indexMap = index && typeof index === 'object' ? index : {};
 
     const enrich = (item: { key: string; url: string; size: number; uploadedAt: string; contentType?: string }): DocumentItem => {
@@ -155,7 +155,7 @@ export const DocumentService = {
   async getById(key: string): Promise<DocumentItem | null> {
     const head = await BlobService.head(key);
     if (!head) return null;
-    const index = await RedisService.get<Record<string, Partial<DocumentItem>>>(REDIS_BLOB_INDEX_KEY);
+    const index = await getDocIndex();
     const cached = index?.[key];
     const name = nameFromKey(key);
     return {
@@ -213,51 +213,29 @@ export const DocumentService = {
       fullText: fullText || undefined,
     };
 
-    // 2. Register metadata in the Redis index
-    const index = await RedisService.get<Record<string, Partial<DocumentItem>>>(REDIS_BLOB_INDEX_KEY);
+    // 2. Register metadata in the Redis index (状态: processing，等队列消费后变 indexed)
+    const index = await getDocIndex();
     const indexMap: Record<string, Partial<DocumentItem>> =
       index && typeof index === 'object' ? index : {};
-
-    // 3. Build the semantic vector synchronously so the file is immediately
-    //    usable for dedup / recommendations / search.
-    const vectorId = await VectorService.upsertDocument(doc, fullText || doc.summary);
-    doc.vectorId = vectorId;
-    doc.status = 'indexed';
-
-    // 4. Immediately find the most similar existing documents (upstash
-    //    built-in embedding → cosine). Thresholds: ≥ 0.85 likely dup,
-    //    ≥ 0.45 related. Store on the document + Redis index.
-    let duplicates: { id: string; name: string; similarity: number }[] = [];
-    let related: { id: string; name: string; similarity: number }[] = [];
-    if (fullText) {
-      const hits = await VectorService.query(fullText, 8);
-      for (const hit of hits) {
-        if (hit.metadata?.docId === doc.id) continue;
-        const sim = Number(hit.score);
-        const target = { id: hit.metadata?.docId || '', name: hit.metadata?.name || '', similarity: sim };
-        if (!target.id) continue;
-        if (sim >= 0.85) duplicates.push(target);
-        else if (sim >= 0.45) related.push(target);
-      }
-      duplicates.sort((a, b) => b.similarity - a.similarity);
-      related.sort((a, b) => b.similarity - a.similarity);
-      doc.duplicates = duplicates;
-      doc.relatedDocs = related;
-    }
-
     indexMap[doc.id] = {
       type: contentType,
       summary,
       tags,
       fullText: doc.fullText,
-      status: 'indexed',
-      vectorId: doc.vectorId,
-      duplicates,
-      relatedDocs: related,
+      status: 'processing',
     };
-    await RedisService.set(REDIS_BLOB_INDEX_KEY, indexMap, 86400 * 30);
+    await setDocIndex(indexMap);
 
-    return { document: doc, taskId: `vec_${vectorId}`, textLike };
+    // 3. 把向量化任务派发给 QStash 异步队列（live 模式走 webhook，mock 模式本地 setTimeout 消费）
+    //    上传请求立即返回；worker 完成后会更新索引元数据：status → indexed + vectorId/duplicates/relatedDocs
+    const queueTask = await QueueService.enqueue({
+      taskType: 'extract_and_embed',
+      docId: doc.id,
+      docName: name,
+      data: { text: fullText },
+    });
+
+    return { document: doc, taskId: queueTask.id, textLike };
   },
 
   async searchSemantic(queryText: string): Promise<{
@@ -282,7 +260,7 @@ export const DocumentService = {
 
     const vectorHits = await VectorService.query(queryText, 8);
     const results: SearchResultItem[] = [];
-    const index = await RedisService.get<Record<string, Partial<DocumentItem>>>(REDIS_BLOB_INDEX_KEY);
+    const index = await getDocIndex();
     const indexMap = index && typeof index === 'object' ? index : {};
 
     for (const hit of vectorHits) {
@@ -352,10 +330,10 @@ export const DocumentService = {
     const deleted = await BlobService.delete(key);
     if (!deleted) return false;
 
-    const index = await RedisService.get<Record<string, Partial<DocumentItem>>>(REDIS_BLOB_INDEX_KEY);
+    const index = await getDocIndex();
     if (index && typeof index === 'object' && key in index) {
       delete index[key];
-      await RedisService.set(REDIS_BLOB_INDEX_KEY, index, 86400 * 30);
+      await setDocIndex(index);
     }
 
     return true;
