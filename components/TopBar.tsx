@@ -48,7 +48,7 @@ export function TopBar({
     { id: 'overview', label: '工作台概览', icon: LayoutDashboard },
     { id: 'documents', label: '文件管理', icon: FolderArchive, count: docsCount },
     { id: 'search', label: '向量数据库', icon: Database },
-    { id: 'queue', label: 'QStash 队列舱', icon: Activity },
+    { id: 'queue', label: 'QStash 队列', icon: Activity },
     { id: 'redis', label: 'Redis 空间与用例', icon: Server },
     { id: 'system', label: '云端架构诊断', icon: Database },
   ];

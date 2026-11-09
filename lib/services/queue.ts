@@ -1,6 +1,32 @@
 import { Client } from '@upstash/qstash';
+import type { Log, Schedule, UrlGroup } from '@upstash/qstash';
 import { envConfig } from '../config';
 import { QueueTaskItem } from '../types';
+
+/** 死信队列消息（本地精简版，SDK 未导出 DlqMessage 类型） */
+export interface DlqMessageLite {
+  messageId: string;
+  dlqId: string;
+  url: string;
+  method?: string;
+  body?: string;
+  state?: string;
+  time?: number;
+  responseStatus?: number;
+  responseBody?: string;
+  error?: string;
+  labels?: string[];
+}
+
+/** 队列信息（本地精简版） */
+export interface QueueInfo {
+  name: string;
+  parallelism: number;
+  lag: number;
+  paused: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
 
 interface EnqueuePayload {
   taskType: 'extract_and_embed' | 'generate_summary' | 'avatar_sync' | 'purge_cache';
@@ -145,5 +171,233 @@ export const QueueService = {
     const filtered = taskStore.filter((t) => t.status !== 'completed');
     taskStore.length = 0;
     taskStore.push(...filtered);
+  },
+
+  // ============ QStash 资源 CRUD（Navicat 风格）============
+  // live 模式调用真实 Upstash QStash API；mock 模式返回空 + live:false
+
+  async listLogs(cursor?: string): Promise<{ logs: Log[]; cursor: string | null; live: boolean }> {
+    const client = getQStashClient();
+    if (!client) return { logs: [], cursor: null, live: false };
+    try {
+      const res = await client.logs({ cursor: cursor || undefined, count: 20 });
+      return { logs: res.logs ?? [], cursor: res.cursor ?? null, live: true };
+    } catch (err) {
+      console.warn('[QStash] listLogs failed:', err);
+      return { logs: [], cursor: null, live: false };
+    }
+  },
+
+  async cancelMessages(messageIds: string[]): Promise<{ cancelled: number; live: boolean }> {
+    const client = getQStashClient();
+    if (!client) return { cancelled: 0, live: false };
+    try {
+      const res = await client.messages.cancel(messageIds);
+      return { cancelled: res.cancelled ?? messageIds.length, live: true };
+    } catch (err) {
+      console.warn('[QStash] cancelMessages failed:', err);
+      return { cancelled: 0, live: false };
+    }
+  },
+
+  async listSchedules(): Promise<{ schedules: Schedule[]; live: boolean }> {
+    const client = getQStashClient();
+    if (!client) return { schedules: [], live: false };
+    try {
+      const schedules = await client.schedules.list();
+      return { schedules: schedules ?? [], live: true };
+    } catch (err) {
+      console.warn('[QStash] listSchedules failed:', err);
+      return { schedules: [], live: false };
+    }
+  },
+
+  async createSchedule(input: {
+    destination: string;
+    cron: string;
+    body?: string;
+    method?: string;
+    retries?: number;
+  }): Promise<{ scheduleId: string | null; live: boolean; error?: string }> {
+    const client = getQStashClient();
+    if (!client) return { scheduleId: null, live: false, error: 'QStash 未连接（本地模拟模式）' };
+    try {
+      const res = await client.schedules.create({
+        destination: input.destination,
+        cron: input.cron,
+        body: input.body || '',
+        method: (input.method as 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH') || 'POST',
+        retries: input.retries ?? 3,
+      });
+      return { scheduleId: res.scheduleId, live: true };
+    } catch (err) {
+      return { scheduleId: null, live: true, error: err instanceof Error ? err.message : '创建失败' };
+    }
+  },
+
+  async deleteSchedule(scheduleId: string): Promise<{ ok: boolean; live: boolean }> {
+    const client = getQStashClient();
+    if (!client) return { ok: false, live: false };
+    try {
+      await client.schedules.delete(scheduleId);
+      return { ok: true, live: true };
+    } catch (err) {
+      console.warn('[QStash] deleteSchedule failed:', err);
+      return { ok: false, live: false };
+    }
+  },
+
+  async pauseSchedule(scheduleId: string): Promise<{ ok: boolean }> {
+    const client = getQStashClient();
+    if (!client) return { ok: false };
+    try {
+      await client.schedules.pause({ schedule: scheduleId });
+      return { ok: true };
+    } catch (err) {
+      console.warn('[QStash] pauseSchedule failed:', err);
+      return { ok: false };
+    }
+  },
+
+  async resumeSchedule(scheduleId: string): Promise<{ ok: boolean }> {
+    const client = getQStashClient();
+    if (!client) return { ok: false };
+    try {
+      await client.schedules.resume({ schedule: scheduleId });
+      return { ok: true };
+    } catch (err) {
+      console.warn('[QStash] resumeSchedule failed:', err);
+      return { ok: false };
+    }
+  },
+
+  async listDLQ(cursor?: string): Promise<{ messages: DlqMessageLite[]; cursor: string | null; live: boolean }> {
+    const client = getQStashClient();
+    if (!client) return { messages: [], cursor: null, live: false };
+    try {
+      const res = await client.dlq.listMessages({ count: 20, cursor: cursor || undefined });
+      const messages = (res.messages ?? []).map((m) => ({
+        messageId: m.messageId,
+        dlqId: m.dlqId,
+        url: m.url,
+        method: m.method,
+        body: m.body,
+        responseStatus: m.responseStatus,
+        responseBody: m.responseBody,
+      }));
+      return { messages, cursor: res.cursor ?? null, live: true };
+    } catch (err) {
+      console.warn('[QStash] listDLQ failed:', err);
+      return { messages: [], cursor: null, live: false };
+    }
+  },
+
+  async deleteDLQ(dlqIds: string[]): Promise<{ deleted: number; live: boolean }> {
+    const client = getQStashClient();
+    if (!client) return { deleted: 0, live: false };
+    try {
+      const res = await client.dlq.delete(dlqIds);
+      return { deleted: res.deleted ?? dlqIds.length, live: true };
+    } catch (err) {
+      console.warn('[QStash] deleteDLQ failed:', err);
+      return { deleted: 0, live: false };
+    }
+  },
+
+  async retryDLQ(dlqIds: string[]): Promise<{ ok: boolean; live: boolean }> {
+    const client = getQStashClient();
+    if (!client) return { ok: false, live: false };
+    try {
+      await client.dlq.retry(dlqIds);
+      return { ok: true, live: true };
+    } catch (err) {
+      console.warn('[QStash] retryDLQ failed:', err);
+      return { ok: false, live: false };
+    }
+  },
+
+  async listUrlGroups(): Promise<{ groups: UrlGroup[]; live: boolean }> {
+    const client = getQStashClient();
+    if (!client) return { groups: [], live: false };
+    try {
+      const groups = await client.urlGroups.list();
+      return { groups: groups ?? [], live: true };
+    } catch (err) {
+      console.warn('[QStash] listUrlGroups failed:', err);
+      return { groups: [], live: false };
+    }
+  },
+
+  async createUrlGroup(name: string, endpoints: { url: string; name?: string }[]): Promise<{ ok: boolean; live: boolean; error?: string }> {
+    const client = getQStashClient();
+    if (!client) return { ok: false, live: false, error: 'QStash 未连接' };
+    try {
+      await client.urlGroups.addEndpoints({ name, endpoints });
+      return { ok: true, live: true };
+    } catch (err) {
+      return { ok: false, live: true, error: err instanceof Error ? err.message : '创建失败' };
+    }
+  },
+
+  async deleteUrlGroup(name: string): Promise<{ ok: boolean; live: boolean }> {
+    const client = getQStashClient();
+    if (!client) return { ok: false, live: false };
+    try {
+      await client.urlGroups.delete(name);
+      return { ok: true, live: true };
+    } catch (err) {
+      console.warn('[QStash] deleteUrlGroup failed:', err);
+      return { ok: false, live: false };
+    }
+  },
+
+  async listQueues(): Promise<{ queues: QueueInfo[]; live: boolean }> {
+    const client = getQStashClient();
+    if (!client) return { queues: [], live: false };
+    try {
+      const queues = await client.queue().list();
+      return { queues: queues ?? [], live: true };
+    } catch (err) {
+      console.warn('[QStash] listQueues failed:', err);
+      return { queues: [], live: false };
+    }
+  },
+
+  async deleteQueue(name: string): Promise<{ ok: boolean; live: boolean }> {
+    const client = getQStashClient();
+    if (!client) return { ok: false, live: false };
+    try {
+      await client.queue({ queueName: name }).delete();
+      return { ok: true, live: true };
+    } catch (err) {
+      console.warn('[QStash] deleteQueue failed:', err);
+      return { ok: false, live: false };
+    }
+  },
+
+  /** 发布一条原始消息到任意 URL */
+  async publishRaw(input: {
+    url: string;
+    body?: string;
+    method?: string;
+    headers?: Record<string, string>;
+    retries?: number;
+    delay?: number;
+  }): Promise<{ messageId: string | null; live: boolean; error?: string }> {
+    const client = getQStashClient();
+    if (!client) return { messageId: null, live: false, error: 'QStash 未连接' };
+    try {
+      const res = await client.publish({
+        url: input.url,
+        body: input.body || '',
+        method: (input.method as 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH') || 'POST',
+        headers: input.headers,
+        retries: input.retries ?? 3,
+        delay: input.delay,
+      });
+      return { messageId: res.messageId, live: true };
+    } catch (err) {
+      return { messageId: null, live: true, error: err instanceof Error ? err.message : '发布失败' };
+    }
   },
 };
