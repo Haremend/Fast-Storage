@@ -233,54 +233,73 @@ export function TaskQueueView() {
       case 'logs':
         return (
           <>
-            <th className="col-span-2 text-left">消息 ID / 状态</th>
-            <th className="col-span-3 text-left">URL</th>
-            <th className="col-span-2 text-left">时间</th>
-            <th className="col-span-1 text-left">错误</th>
-            <th className="col-span-1 text-right">操作</th>
+            <th className="w-4 text-center"></th>
+            <th className="w-[200px] text-left">消息 ID / 状态</th>
+            <th className="text-left">URL</th>
+            <th className="w-[100px] text-left">时间</th>
+            <th className="w-[120px] text-left">错误</th>
+            <th className="w-[60px] text-right">操作</th>
           </>
         );
       case 'schedules':
         return (
           <>
-            <th className="col-span-2 text-left">Schedule ID</th>
-            <th className="col-span-2 text-left">目标</th>
-            <th className="col-span-2 text-left">Cron</th>
-            <th className="col-span-1 text-left">状态</th>
-            <th className="col-span-1 text-left">创建时间</th>
-            <th className="col-span-2 text-right">操作</th>
+            <th className="w-4 text-center"></th>
+            <th className="w-[180px] text-left">Schedule ID</th>
+            <th className="text-left">目标</th>
+            <th className="w-[100px] text-left">Cron</th>
+            <th className="w-[80px] text-left">状态</th>
+            <th className="w-[100px] text-left">创建时间</th>
+            <th className="w-[100px] text-right">操作</th>
           </>
         );
       case 'dlq':
         return (
           <>
-            <th className="col-span-2 text-left">DLQ ID</th>
-            <th className="col-span-3 text-left">URL</th>
-            <th className="col-span-1 text-left">状态码</th>
-            <th className="col-span-2 text-left">响应</th>
-            <th className="col-span-2 text-right">操作</th>
+            <th className="w-4 text-center"></th>
+            <th className="w-[180px] text-left">DLQ ID</th>
+            <th className="text-left">URL</th>
+            <th className="w-[70px] text-left">状态码</th>
+            <th className="w-[160px] text-left">响应</th>
+            <th className="w-[100px] text-right">操作</th>
           </>
         );
       case 'urlgroups':
         return (
           <>
-            <th className="col-span-3 text-left">名称</th>
-            <th className="col-span-5 text-left">Endpoints</th>
-            <th className="col-span-2 text-right">操作</th>
+            <th className="w-4 text-center"></th>
+            <th className="w-[140px] text-left">名称</th>
+            <th className="text-left">Endpoints</th>
+            <th className="w-[60px] text-right">操作</th>
           </>
         );
       case 'queues':
         return (
           <>
-            <th className="col-span-3 text-left">名称</th>
-            <th className="col-span-1 text-left">并发</th>
-            <th className="col-span-1 text-left">积压</th>
-            <th className="col-span-2 text-left">状态</th>
-            <th className="col-span-2 text-right">操作</th>
+            <th className="w-4 text-center"></th>
+            <th className="w-[140px] text-left">名称</th>
+            <th className="w-[70px] text-left">并发</th>
+            <th className="w-[70px] text-left">积压</th>
+            <th className="w-[80px] text-left">状态</th>
+            <th className="w-[60px] text-right">操作</th>
           </>
         );
     }
   };
+
+  const renderSelectAllTh = () => (
+    <th className="w-4 text-center">
+      {rows.length > 0 && (
+        <input
+          type="checkbox"
+          checked={allVisibleSelected}
+          onChange={toggleSelectAll}
+          className="w-3.5 h-3.5 accent-rose-500 cursor-pointer"
+          title="全选/取消当前页"
+        />
+      )}
+    </th>
+  );
 
   const renderRow = (row: Record<string, unknown>) => {
     const id = rowId(row);
@@ -290,16 +309,14 @@ export function TaskQueueView() {
     if (tab === 'logs') {
       return (
         <tr key={id} className={checked ? 'bg-rose-500/10' : 'hover:bg-white/40 dark:hover:bg-white/5'}>
-          <td className="px-4 py-3 text-xs">
-            <div className="flex items-center gap-2">
-              <input type="checkbox" checked={checked} onChange={() => toggleSelect(id)} className="w-3.5 h-3.5 accent-rose-500 cursor-pointer" />
-              <div className="min-w-0">
-                <div className="font-mono text-slate-900 dark:text-white truncate" title={String(row.messageId)}>{String(row.messageId).slice(0, 24)}…</div>
-                <div className={`font-bold ${stateColor(String(row.state))}`}>{String(row.state)}</div>
-              </div>
-            </div>
+          <td className="px-2 py-3 text-center">
+            <input type="checkbox" checked={checked} onChange={() => toggleSelect(id)} className="w-3.5 h-3.5 accent-rose-500 cursor-pointer" />
           </td>
-          <td className={cellCls} title={String(row.url)}>{String(row.url).slice(0, 50)}</td>
+          <td className="px-3 py-3 text-xs min-w-0">
+            <div className="font-mono text-slate-900 dark:text-white truncate" title={String(row.messageId)}>{String(row.messageId).slice(0, 24)}…</div>
+            <div className={`font-bold ${stateColor(String(row.state))}`}>{String(row.state)}</div>
+          </td>
+          <td className={cellCls} title={String(row.url)}>{String(row.url).slice(0, 60)}</td>
           <td className={cellCls}>{fmtTime(Number(row.time))}</td>
           <td className={cellCls}>{row.error ? String(row.error).slice(0, 40) : '—'}</td>
           <td className="px-4 py-3 text-right">
@@ -315,15 +332,15 @@ export function TaskQueueView() {
       const paused = Boolean(row.isPaused);
       return (
         <tr key={id} className={checked ? 'bg-rose-500/10' : 'hover:bg-white/40 dark:hover:bg-white/5'}>
-          <td className="px-4 py-3 text-xs">
-            <div className="flex items-center gap-2">
-              <input type="checkbox" checked={checked} onChange={() => toggleSelect(id)} className="w-3.5 h-3.5 accent-rose-500 cursor-pointer" />
-              <span className="font-mono text-slate-900 dark:text-white truncate" title={String(row.scheduleId)}>{String(row.scheduleId).slice(0, 24)}…</span>
-            </div>
+          <td className="px-2 py-3 text-center">
+            <input type="checkbox" checked={checked} onChange={() => toggleSelect(id)} className="w-3.5 h-3.5 accent-rose-500 cursor-pointer" />
           </td>
-          <td className={cellCls} title={String(row.destination)}>{String(row.destination).slice(0, 40)}</td>
-          <td className="font-mono text-xs px-4 py-3 text-slate-700 dark:text-slate-300">{String(row.cron)}</td>
-          <td className="px-4 py-3 text-xs">
+          <td className="px-3 py-3 text-xs min-w-0">
+            <span className="font-mono text-slate-900 dark:text-white truncate block" title={String(row.scheduleId)}>{String(row.scheduleId).slice(0, 24)}…</span>
+          </td>
+          <td className={cellCls} title={String(row.destination)}>{String(row.destination).slice(0, 50)}</td>
+          <td className="font-mono text-xs px-3 py-3 text-slate-700 dark:text-slate-300">{String(row.cron)}</td>
+          <td className="px-3 py-3 text-xs">
             <span className={paused ? 'text-amber-500 font-bold' : 'text-emerald-600 dark:text-emerald-400 font-bold'}>
               {paused ? '已暂停' : '运行中'}
             </span>
@@ -346,17 +363,17 @@ export function TaskQueueView() {
     if (tab === 'dlq') {
       return (
         <tr key={id} className={checked ? 'bg-rose-500/10' : 'hover:bg-white/40 dark:hover:bg-white/5'}>
-          <td className="px-4 py-3 text-xs">
-            <div className="flex items-center gap-2">
-              <input type="checkbox" checked={checked} onChange={() => toggleSelect(id)} className="w-3.5 h-3.5 accent-rose-500 cursor-pointer" />
-              <span className="font-mono text-slate-900 dark:text-white truncate" title={String(row.dlqId)}>{String(row.dlqId).slice(0, 24)}…</span>
-            </div>
+          <td className="px-2 py-3 text-center">
+            <input type="checkbox" checked={checked} onChange={() => toggleSelect(id)} className="w-3.5 h-3.5 accent-rose-500 cursor-pointer" />
           </td>
-          <td className={cellCls} title={String(row.url)}>{String(row.url).slice(0, 50)}</td>
-          <td className="px-4 py-3 text-xs font-mono">
+          <td className="px-3 py-3 text-xs min-w-0">
+            <span className="font-mono text-slate-900 dark:text-white truncate block" title={String(row.dlqId)}>{String(row.dlqId).slice(0, 24)}…</span>
+          </td>
+          <td className={cellCls} title={String(row.url)}>{String(row.url).slice(0, 60)}</td>
+          <td className="px-3 py-3 text-xs font-mono">
             <span className={row.responseStatus ? 'text-rose-500 font-bold' : 'text-slate-400'}>{String(row.responseStatus || '—')}</span>
           </td>
-          <td className={cellCls} title={String(row.responseBody)}>{row.responseBody ? String(row.responseBody).slice(0, 40) : '—'}</td>
+          <td className={cellCls} title={String(row.responseBody)}>{row.responseBody ? String(row.responseBody).slice(0, 50) : '—'}</td>
           <td className="px-4 py-3 text-right">
             <div className="flex items-center justify-end gap-1">
               <button onClick={() => singleAction(row, 'retry')} title="重试" className="liquid-orb w-7 h-7 text-slate-600 dark:text-slate-300 hover:text-emerald-500 cursor-pointer">
@@ -375,15 +392,15 @@ export function TaskQueueView() {
       const endpoints = Array.isArray(row.endpoints) ? (row.endpoints as { url: string }[]) : [];
       return (
         <tr key={id} className={checked ? 'bg-rose-500/10' : 'hover:bg-white/40 dark:hover:bg-white/5'}>
-          <td className="px-4 py-3 text-xs">
-            <div className="flex items-center gap-2">
-              <input type="checkbox" checked={checked} onChange={() => toggleSelect(id)} className="w-3.5 h-3.5 accent-rose-500 cursor-pointer" />
-              <span className="font-bold text-slate-900 dark:text-white">{String(row.name)}</span>
-            </div>
+          <td className="px-2 py-3 text-center">
+            <input type="checkbox" checked={checked} onChange={() => toggleSelect(id)} className="w-3.5 h-3.5 accent-rose-500 cursor-pointer" />
+          </td>
+          <td className="px-3 py-3 text-xs min-w-0">
+            <span className="font-bold text-slate-900 dark:text-white truncate block">{String(row.name)}</span>
           </td>
           <td className={cellCls}>
             {endpoints.length > 0 ? (
-              <span className="font-mono">{endpoints.map((e) => e.url).join(', ').slice(0, 60)}</span>
+              <span className="font-mono">{endpoints.map((e) => e.url).join(', ').slice(0, 80)}</span>
             ) : '—'}
           </td>
           <td className="px-4 py-3 text-right">
@@ -399,15 +416,15 @@ export function TaskQueueView() {
     const paused = Boolean(row.paused);
     return (
       <tr key={id} className={checked ? 'bg-rose-500/10' : 'hover:bg-white/40 dark:hover:bg-white/5'}>
-        <td className="px-4 py-3 text-xs">
-          <div className="flex items-center gap-2">
-            <input type="checkbox" checked={checked} onChange={() => toggleSelect(id)} className="w-3.5 h-3.5 accent-rose-500 cursor-pointer" />
-            <span className="font-bold text-slate-900 dark:text-white">{String(row.name)}</span>
-          </div>
+        <td className="px-2 py-3 text-center">
+          <input type="checkbox" checked={checked} onChange={() => toggleSelect(id)} className="w-3.5 h-3.5 accent-rose-500 cursor-pointer" />
         </td>
-        <td className="px-4 py-3 text-xs font-mono text-slate-700 dark:text-slate-300">{String(row.parallelism)}</td>
-        <td className="px-4 py-3 text-xs font-mono text-slate-700 dark:text-slate-300">{String(row.lag)}</td>
-        <td className="px-4 py-3 text-xs">
+        <td className="px-3 py-3 text-xs min-w-0">
+          <span className="font-bold text-slate-900 dark:text-white truncate block">{String(row.name)}</span>
+        </td>
+        <td className="px-3 py-3 text-xs font-mono text-slate-700 dark:text-slate-300">{String(row.parallelism)}</td>
+        <td className="px-3 py-3 text-xs font-mono text-slate-700 dark:text-slate-300">{String(row.lag)}</td>
+        <td className="px-3 py-3 text-xs">
           <span className={paused ? 'text-amber-500 font-bold' : 'text-emerald-600 dark:text-emerald-400 font-bold'}>
             {paused ? '已暂停' : '运行中'}
           </span>
@@ -511,23 +528,24 @@ export function TaskQueueView() {
 
       {/* 数据表 */}
       <div className="rounded-3xl liquid-glass overflow-hidden shadow-md">
-        <table className="w-full">
+        <table className="w-full table-fixed">
           <thead>
             <tr className="border-b border-black/5 dark:border-white/10 text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider font-mono">
+              {renderSelectAllTh()}
               {renderColumns()}
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={9} className="p-12 text-center">
+                <td colSpan={tab === 'logs' ? 6 : tab === 'schedules' ? 7 : tab === 'dlq' ? 6 : tab === 'urlgroups' ? 4 : 6} className="p-12 text-center">
                   <Loader2 className="w-5 h-5 animate-spin text-amber-500 mx-auto mb-2" />
                   <span className="text-xs text-slate-500 dark:text-slate-300">正在查询 QStash...</span>
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={9} className="p-12 text-center">
+                <td colSpan={tab === 'logs' ? 6 : tab === 'schedules' ? 7 : tab === 'dlq' ? 6 : tab === 'urlgroups' ? 4 : 6} className="p-12 text-center">
                   <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
                     {live === false ? 'QStash 未连接（本地模拟模式）' : '暂无记录'}
                   </div>
