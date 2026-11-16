@@ -150,7 +150,7 @@ export function TopBar({
                 Fast Storage
               </span>
               <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-300 font-mono tracking-wider opacity-85 mt-0.5">
-                LIQUID CLOUD
+                {process.env.NEXT_PUBLIC_BUILD_VERSION ?? 'DEV'}
               </span>
             </div>
           </button>
