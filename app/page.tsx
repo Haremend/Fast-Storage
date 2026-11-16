@@ -57,6 +57,7 @@ export default function HomePage() {
 
   // Modals state
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [uploadMode, setUploadMode] = useState<'file' | 'image' | 'text'>('file');
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
   const [isWallpaperOpen, setIsWallpaperOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<DocumentItem | null>(null);
@@ -282,6 +283,16 @@ export default function HomePage() {
     fetchStatus();
   };
 
+  // 打开上传弹窗：默认进入本地文件模式 / 图片模式
+  const openUploadFile = useCallback(() => {
+    setUploadMode('file');
+    setIsUploadOpen(true);
+  }, []);
+  const openUploadImage = useCallback(() => {
+    setUploadMode('image');
+    setIsUploadOpen(true);
+  }, []);
+
   const handleSelectDocument = async (key: string) => {
     try {
       const res = await fetch(`/api/documents?id=${encodeURIComponent(key)}`);
@@ -388,7 +399,8 @@ export default function HomePage() {
       <TopBar
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
-        onOpenUpload={() => setIsUploadOpen(true)}
+        onOpenUpload={openUploadFile}
+        onOpenImageUpload={openUploadImage}
         onOpenAvatar={() => setIsAvatarOpen(true)}
         onOpenWallpaper={() => setIsWallpaperOpen(true)}
         session={session}
@@ -411,7 +423,7 @@ export default function HomePage() {
               status={status}
               onSelectTab={setCurrentTab}
               onSelectDocument={setSelectedDoc}
-              onOpenUpload={() => setIsUploadOpen(true)}
+              onOpenUpload={openUploadFile}
               onOpenAvatar={() => setIsAvatarOpen(true)}
             />
           )}
@@ -419,7 +431,7 @@ export default function HomePage() {
           {currentTab === 'documents' && (
             <DocumentsView
               onSelectDocument={(doc) => handleSelectDocument(doc.id)}
-              onOpenUpload={() => setIsUploadOpen(true)}
+              onOpenUpload={openUploadFile}
               onOpenVectorDb={handleTriggerSemanticSearch}
             />
           )}
@@ -441,6 +453,8 @@ export default function HomePage() {
         isOpen={isUploadOpen}
         onClose={() => setIsUploadOpen(false)}
         onDocumentUploaded={handleDocumentUploaded}
+        mode={uploadMode}
+        onModeChange={setUploadMode}
       />
 
       <AvatarModal

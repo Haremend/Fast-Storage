@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   X,
   Upload,
@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Link,
   Files,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { DocumentItem, SimilarDocRef } from '@/lib/types';
 
@@ -28,6 +29,8 @@ const FOLDER_OPTIONS: { id: BlobFolder; label: string; desc: string }[] = [
 
 type UploadStatus = 'pending' | 'uploading' | 'done' | 'error';
 
+type UploadMode = 'file' | 'text' | 'image';
+
 interface SelectedFile {
   id: string;
   file: File;
@@ -35,12 +38,15 @@ interface SelectedFile {
   message?: string;
   duplicate?: SimilarDocRef;
   related?: SimilarDocRef[];
+  previewUrl?: string;
 }
 
 interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onDocumentUploaded: (doc: DocumentItem) => void;
+  mode: UploadMode;
+  onModeChange: (mode: UploadMode) => void;
 }
 
 const formatSize = (bytes: number) =>
@@ -50,6 +56,8 @@ export function UploadModal({
   isOpen,
   onClose,
   onDocumentUploaded,
+  mode,
+  onModeChange,
 }: UploadModalProps) {
   const [files, setFiles] = useState<SelectedFile[]>([]);
   const [tags, setTags] = useState('个人文档, 架构设计');
@@ -63,30 +71,87 @@ export function UploadModal({
   const [dupWarning, setDupWarning] = useState<SimilarDocRef | null>(null);
   const [relatedDocs, setRelatedDocs] = useState<SimilarDocRef[]>([]);
 
+  // 上传模式由调用方控制（本地文件 / 上传图片 / 在线 Markdown）
+
   // 快速文本编辑模式
-  const [isTextMode, setIsTextMode] = useState(false);
   const [textDocName, setTextDocName] = useState('');
   const [textContent, setTextContent] = useState('');
 
-  if (!isOpen) return null;
-
-  const addFiles = (incoming: FileList | File[]) => {
-    const arr = Array.from(incoming);
-    setFiles((prev) => {
-      const existing = new Set(prev.map((f) => f.id));
-      const next = [...prev];
-      for (const file of arr) {
-        const id = `${file.name}-${file.size}-${file.lastModified}`;
-        if (existing.has(id)) continue;
-        existing.add(id);
-        next.push({ id, file, status: 'pending' });
+  const addFiles = useCallback(
+    (incoming: FileList | File[]) => {
+      const arr = Array.from(incoming);
+      // 图片模式下仅接受图片文件，自动过滤其余类型
+      if (mode === 'image') {
+        const images = arr.filter((f) => f.type.startsWith('image/'));
+        if (images.length === 0) {
+          setErrorMessage('仅支持图片文件（PNG / JPG / WebP / GIF 等），已忽略拖入的非图片文件。');
+          return;
+        }
+        if (images.length < arr.length) {
+          setErrorMessage('已自动过滤非图片文件，仅保留图片。');
+        } else {
+          setErrorMessage(null);
+        }
+        setFiles((prev) => {
+          const existing = new Set(prev.map((f) => f.id));
+          const next = [...prev];
+          for (const file of images) {
+            const id = `${file.name}-${file.size}-${file.lastModified}`;
+            if (existing.has(id)) continue;
+            existing.add(id);
+            next.push({ id, file, status: 'pending', previewUrl: URL.createObjectURL(file) });
+          }
+          return next;
+        });
+        return;
       }
-      return next;
-    });
-  };
+
+      setFiles((prev) => {
+        const existing = new Set(prev.map((f) => f.id));
+        const next = [...prev];
+        for (const file of arr) {
+          const id = `${file.name}-${file.size}-${file.lastModified}`;
+          if (existing.has(id)) continue;
+          existing.add(id);
+          next.push({
+            id,
+            file,
+            status: 'pending',
+            previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
+          });
+        }
+        return next;
+      });
+    },
+    [mode]
+  );
+
+  // 图片模式：监听全局粘贴事件，支持从剪贴板粘贴图片
+  useEffect(() => {
+    if (!isOpen || mode !== 'image') return;
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items || items.length === 0) return;
+      const imageFiles: File[] = [];
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].kind === 'file' && items[i].type.startsWith('image/')) {
+          const f = items[i].getAsFile();
+          if (f) imageFiles.push(f);
+        }
+      }
+      if (imageFiles.length > 0) {
+        e.preventDefault();
+        addFiles(imageFiles);
+      }
+    };
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [isOpen, mode, addFiles]);
 
   const removeFile = (id: string) => {
     if (isUploading) return;
+    const target = files.find((f) => f.id === id);
+    if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl);
     setFiles((prev) => prev.filter((f) => f.id !== id));
   };
 
@@ -97,6 +162,9 @@ export function UploadModal({
   };
 
   const resetAll = () => {
+    files.forEach((f) => {
+      if (f.previewUrl) URL.revokeObjectURL(f.previewUrl);
+    });
     setFiles([]);
     setSummary('');
     setErrorMessage(null);
@@ -161,7 +229,7 @@ export function UploadModal({
     setRelatedDocs([]);
 
     // —— 在线 Markdown 编辑模式：单文档 ——
-    if (isTextMode) {
+    if (mode === 'text') {
       if (!textDocName.trim() || !textContent.trim()) {
         setErrorMessage('请填写文件名与正文内容。');
         return;
@@ -198,10 +266,10 @@ export function UploadModal({
       return;
     }
 
-    // —— 本地文件模式：批量逐文件上传 ——
+    // —— 本地文件 / 图片模式：批量逐文件上传 ——
     const pending = files.filter((f) => f.status !== 'done');
     if (pending.length === 0) {
-      setErrorMessage('请先选择或拖拽待上传的文件。');
+      setErrorMessage(mode === 'image' ? '请先选择、拖拽或粘贴待上传的图片。' : '请先选择或拖拽待上传的文件。');
       return;
     }
 
@@ -219,9 +287,11 @@ export function UploadModal({
   const pendingCount = files.filter((f) => f.status !== 'done').length;
   const doneCount = files.filter((f) => f.status === 'done').length;
   const errorCount = files.filter((f) => f.status === 'error').length;
-  const canSubmit = isTextMode
+  const canSubmit = mode === 'text'
     ? Boolean(textDocName.trim() && textContent.trim())
     : pendingCount > 0;
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xl">
@@ -250,12 +320,12 @@ export function UploadModal({
           {/* 可滚动内容区 */}
           <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4">
             {/* 模式切换 */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
-                onClick={() => setIsTextMode(false)}
+                onClick={() => onModeChange('file')}
                 className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all cursor-pointer ${
-                  !isTextMode
+                  mode === 'file'
                     ? 'liquid-pill-primary shadow-xs'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                 }`}
@@ -264,9 +334,21 @@ export function UploadModal({
               </button>
               <button
                 type="button"
-                onClick={() => setIsTextMode(true)}
+                onClick={() => onModeChange('image')}
                 className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all flex items-center gap-1.5 cursor-pointer ${
-                  isTextMode
+                  mode === 'image'
+                    ? 'liquid-pill-primary shadow-xs'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <ImageIcon className="w-3.5 h-3.5" />
+                <span>上传图片（支持粘贴）</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onModeChange('text')}
+                className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all flex items-center gap-1.5 cursor-pointer ${
+                  mode === 'text'
                     ? 'liquid-pill-primary shadow-xs'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                 }`}
@@ -301,7 +383,7 @@ export function UploadModal({
               </div>
             </div>
 
-            {!isTextMode ? (
+            {mode === 'file' && (
               <>
                 {/* 拖拽 / 多选上传区域 */}
                 <div
@@ -410,7 +492,125 @@ export function UploadModal({
                   </div>
                 )}
               </>
-            ) : (
+            )}
+
+            {mode === 'image' && (
+              <>
+                {/* 拖拽 / 点击 / 粘贴 图片上传区域 */}
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={handleDrop}
+                  className={`p-7 rounded-2xl border-2 border-dashed text-center transition-all liquid-glass-subtle ${
+                    isDragging
+                      ? 'border-purple-500 bg-purple-500/15'
+                      : 'border-slate-300 dark:border-white/15 hover:border-purple-500/50'
+                  }`}
+                >
+                  <input
+                    type="file"
+                    id="doc-image-input"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files?.length) addFiles(e.target.files);
+                      e.target.value = '';
+                    }}
+                    className="hidden"
+                  />
+                  <label htmlFor="doc-image-input" className="cursor-pointer block">
+                    <div className="w-14 h-14 rounded-2xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto mb-2.5 shadow-xs">
+                      <ImageIcon className="w-7 h-7 stroke-[2.2]" />
+                    </div>
+                    <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      点击选择图片 · 拖拽到此 · 或粘贴 (Ctrl+V)
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-300 mt-1">
+                      支持 PNG / JPG / WebP / GIF，批量上传并存入 Upstash Blob
+                    </div>
+                  </label>
+                </div>
+
+                {/* 已选图片缩略图网格 */}
+                {files.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-300 font-mono uppercase tracking-wider">
+                      <span className="flex items-center gap-1.5">
+                        <ImageIcon className="w-3.5 h-3.5 text-purple-500" />
+                        已选图片 ({files.length})
+                      </span>
+                      <span>
+                        成功 {doneCount} · 失败 {errorCount} · 待传 {pendingCount}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-64 overflow-y-auto pr-1">
+                      {files.map((item) => (
+                        <div
+                          key={item.id}
+                          className="relative group rounded-xl overflow-hidden liquid-glass-subtle aspect-square border border-white/40 dark:border-white/10"
+                        >
+                          {item.previewUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={item.previewUrl}
+                              alt={item.file.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-400">
+                              <ImageIcon className="w-6 h-6" />
+                            </div>
+                          )}
+
+                          {/* 状态遮罩 */}
+                          {item.status !== 'pending' && (
+                            <div
+                              className={`absolute inset-0 flex items-center justify-center backdrop-blur-sm ${
+                                item.status === 'uploading'
+                                  ? 'bg-black/40 text-emerald-300'
+                                  : item.status === 'done'
+                                    ? 'bg-emerald-500/40 text-white'
+                                    : 'bg-rose-500/40 text-white'
+                              }`}
+                            >
+                              {item.status === 'uploading' ? (
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                              ) : item.status === 'done' ? (
+                                <Check className="w-4 h-4" />
+                              ) : (
+                                <AlertTriangle className="w-4 h-4" />
+                              )}
+                            </div>
+                          )}
+
+                          {/* 文件名 */}
+                          <div className="absolute bottom-0 inset-x-0 px-1.5 py-1 bg-black/55 text-[9px] text-white font-mono truncate">
+                            {item.file.name}
+                          </div>
+
+                          {/* 移除按钮 */}
+                          {item.status !== 'uploading' && !isUploading && (
+                            <button
+                              type="button"
+                              onClick={() => removeFile(item.id)}
+                              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-rose-500"
+                              title="移除"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {mode === 'text' && (
               /* 文本编辑模式 */
               <div className="space-y-3">
                 <div>
@@ -471,7 +671,7 @@ export function UploadModal({
             </div>
 
             {/* 文本模式的结果（批量文件的结果显示在文件列表中） */}
-            {isTextMode && (errorMessage || successInfo || dupWarning || relatedDocs.length > 0) && (
+            {mode === 'text' && (errorMessage || successInfo || dupWarning || relatedDocs.length > 0) && (
               <div className="space-y-2">
                 {errorMessage && (
                   <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold">
@@ -504,7 +704,7 @@ export function UploadModal({
             )}
 
             {/* 批量上传错误提示 */}
-            {!isTextMode && errorMessage && (
+            {mode !== 'text' && errorMessage && (
               <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold">
                 {errorMessage}
               </div>
@@ -514,9 +714,9 @@ export function UploadModal({
           {/* 底部操作栏 */}
           <div className="flex items-center justify-between gap-2.5 px-6 py-4 border-t border-black/5 dark:border-white/10 shrink-0">
             <div className="text-[11px] text-slate-500 dark:text-slate-300 font-mono truncate">
-              {!isTextMode && files.length > 0
-                ? `${files.length} 个文件 · 将存入 ${folder}/`
-                : isTextMode
+              {mode !== 'text' && files.length > 0
+                ? `${files.length} 个${mode === 'image' ? '图片' : '文件'} · 将存入 ${folder}/`
+                : mode === 'text'
                   ? '在线编辑内容 · 将存入 ' + folder + '/'
                   : '尚未选择文件'}
             </div>
@@ -542,7 +742,7 @@ export function UploadModal({
                 ) : (
                   <>
                     <Upload className="w-3.5 h-3.5" />
-                    <span>{isTextMode ? '确认存入并建立向量' : `开始上传${pendingCount > 0 ? ` (${pendingCount})` : ''}`}</span>
+                    <span>{mode === 'text' ? '确认存入并建立向量' : `开始上传${pendingCount > 0 ? ` (${pendingCount})` : ''}`}</span>
                   </>
                 )}
               </button>
