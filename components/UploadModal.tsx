@@ -45,8 +45,6 @@ interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onDocumentUploaded: (doc: DocumentItem) => void;
-  mode: UploadMode;
-  onModeChange: (mode: UploadMode) => void;
 }
 
 const formatSize = (bytes: number) =>
@@ -56,8 +54,6 @@ export function UploadModal({
   isOpen,
   onClose,
   onDocumentUploaded,
-  mode,
-  onModeChange,
 }: UploadModalProps) {
   const [files, setFiles] = useState<SelectedFile[]>([]);
   const [tags, setTags] = useState('个人文档, 架构设计');
@@ -71,7 +67,8 @@ export function UploadModal({
   const [dupWarning, setDupWarning] = useState<SimilarDocRef | null>(null);
   const [relatedDocs, setRelatedDocs] = useState<SimilarDocRef[]>([]);
 
-  // 上传模式由调用方控制（本地文件 / 上传图片 / 在线 Markdown）
+  // 上传模式：弹窗内 Tab 切换（本地文件 / 上传图片 / 在线 Markdown）
+  const [mode, setMode] = useState<UploadMode>('file');
 
   // 快速文本编辑模式
   const [textDocName, setTextDocName] = useState('');
@@ -323,7 +320,7 @@ export function UploadModal({
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
-                onClick={() => onModeChange('file')}
+                onClick={() => setMode('file')}
                 className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all cursor-pointer ${
                   mode === 'file'
                     ? 'liquid-pill-primary shadow-xs'
@@ -334,7 +331,7 @@ export function UploadModal({
               </button>
               <button
                 type="button"
-                onClick={() => onModeChange('image')}
+                onClick={() => setMode('image')}
                 className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all flex items-center gap-1.5 cursor-pointer ${
                   mode === 'image'
                     ? 'liquid-pill-primary shadow-xs'
@@ -346,7 +343,7 @@ export function UploadModal({
               </button>
               <button
                 type="button"
-                onClick={() => onModeChange('text')}
+                onClick={() => setMode('text')}
                 className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all flex items-center gap-1.5 cursor-pointer ${
                   mode === 'text'
                     ? 'liquid-pill-primary shadow-xs'

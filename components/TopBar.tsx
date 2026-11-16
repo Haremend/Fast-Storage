@@ -13,7 +13,6 @@ import {
   Moon,
   Server,
   Palette,
-  Image as ImageIcon,
   type LucideIcon,
 } from 'lucide-react';
 import { UserSession } from '@/lib/types';
@@ -22,7 +21,6 @@ interface TopBarProps {
   currentTab: string;
   onSelectTab: (tab: string) => void;
   onOpenUpload: () => void;
-  onOpenImageUpload: () => void;
   onOpenAvatar: () => void;
   onOpenWallpaper: () => void;
   session: UserSession | null;
@@ -37,7 +35,6 @@ export function TopBar({
   currentTab,
   onSelectTab,
   onOpenUpload,
-  onOpenImageUpload,
   onOpenAvatar,
   onOpenWallpaper,
   session,
@@ -210,7 +207,7 @@ export function TopBar({
           </div>
         </div>
 
-        {/* 区域 3: 核心动作区 (背景上传与切换、主题切换、上传文件、上传图片、个人头像、登出) */}
+        {/* 区域 3: 核心动作区 (背景上传与切换、主题切换、上传文件、个人头像、登出) */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           {/* 背景壁纸切换与自定义上传按钮 */}
           <button
@@ -231,24 +228,14 @@ export function TopBar({
             {isDarkMode ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-slate-700" />}
           </button>
 
-          {/* 上传文件按钮 (银灰色按键) */}
+          {/* 上传按钮 (银灰色按键，弹窗内可切换 文档/图片/Markdown) */}
           <button
             onClick={onOpenUpload}
-            title="上传任意文件至云端存储"
+            title="上传文件或图片至云端存储"
             className="liquid-pill-primary flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold rounded-full shadow-lg shadow-black/25 cursor-pointer whitespace-nowrap"
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
             <span className="hidden sm:inline">上传文件</span>
-          </button>
-
-          {/* 上传图片按钮 (拖拽 / 选择 / 剪贴板粘贴) */}
-          <button
-            onClick={onOpenImageUpload}
-            title="上传图片：支持拖拽、点击选择与剪贴板粘贴"
-            className="liquid-pill flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs font-bold rounded-full cursor-pointer whitespace-nowrap hover:border-purple-400/50"
-          >
-            <ImageIcon className="w-3.5 h-3.5 text-purple-400" />
-            <span className="hidden sm:inline">上传图片</span>
           </button>
 
           {/* 用户头像与信息 */}
